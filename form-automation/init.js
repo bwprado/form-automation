@@ -23,7 +23,7 @@ const checkForChildrenInclusion = (data) =>
 /**
  * @function sendEmailToStaff
  * @description This function sends emails to staff
- * @param {string} department - Department's id
+ * @param {string} departmentId - Department's id
  * @returns {Promise<object>}
  */
 export const sendEmailToStaff = async (departmentId, email) => {
@@ -38,7 +38,7 @@ export const sendEmailToStaff = async (departmentId, email) => {
 
   const emails = staff.map(({ staffEmail }) => staffEmail);
   const staffIds = emails.map((email) =>
-    contacts.getContacts().hasSome("info.emails.email", email).find(options)
+    contacts.queryContacts().hasSome("info.emails.email", email).find(options)
   );
   const [err, allStaffIds] = await handlePromises(Promise.all(staffIds));
 
@@ -54,6 +54,12 @@ export const sendEmailToStaff = async (departmentId, email) => {
   return emailsToSend;
 };
 
+/**
+ * @function sendEmailToPlannedVisitor
+ * @description This function sends emails to Visitor
+ * @param {string} contactId - Contact's id
+ * @returns {Promise<object>}
+ */
 export const sendEmailToPlannedVisitor = async (contactId) => {
   const [error, email] = await handlePromises(
     triggeredEmails.emailContact(settings.PLANNED_VISIT_EMAIL_ID, contactId)
@@ -64,6 +70,11 @@ export const sendEmailToPlannedVisitor = async (contactId) => {
   return email;
 };
 
+/**
+ * @function sendEmailToStaffDepartment
+ * @description This function is called when form is submitted
+ * @param {object} event - Event Object
+ */
 export const sendEmailToStaffDepartment = async (event) => {
   const { formName, submissionData, contactId } = event;
   const bringChildren = checkForChildrenInclusion(submissionData);
