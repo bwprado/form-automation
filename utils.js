@@ -120,12 +120,10 @@ const changeFieldName = (fieldName) => {
 
 /**
  * @typedef {object} EventObject
- * @property {string} EventObject.contactId - Contact's id
- * @property {string} EventObject.formName - Form's name
- * @property {string} EventObject.submissionTime - Form's submission time
- * @property {object[]} EventObject.submissionData - Form's data
+ * @property {object} EventObject.context - Wix Form Context
+ * @property {string} EventObject.type - Wix Form Event Type
+ * @property {object[]} EventObject.fields - Form's data
  */
-
 /**
  * @typedef {object} FormData
  * @property {string} FormData.firstName - Contact's first name.
@@ -141,7 +139,6 @@ const changeFieldName = (fieldName) => {
  * @property {string} FormData.contact - Personal assistance on visit.
  * @property {string} FormData.message - Form message.
  */
-
 /**
  * @function prepareFormData
  * @description This function changes the data structure for better usage.
