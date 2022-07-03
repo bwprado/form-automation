@@ -1,8 +1,14 @@
 import wixSite from "wix-site";
-import { prepareFormData } from "public/utils";
+import { prepareFormData } from "public/form-automation/utils";
 
 console.time("mainpagetimer");
 
+/**
+ * @function handleSubmit
+ * @description This function is triggered on form submission.
+ * @param {object} e - Event object
+ * @returns {object} Form data.
+ */
 const handleSubmit = (e) => {
   const formData = prepareFormData(e);
   return formData;
@@ -17,6 +23,10 @@ $w.onReady(function () {
   if (response.errors) {
     // handle errors
   }
+  /**
+   * @method onWixFormSubmit
+   * @description Handles all form submissions at once.
+   */
   $w(
     "#wixFormOnline, #wixFormEast, #wixFormWest, #wixFormChinese, #wixFormLation"
   ).onWixFormSubmit(handleSubmit);
