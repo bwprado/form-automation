@@ -1,150 +1,156 @@
-import wixSite from 'wix-site';
+import wixSite from "wix-site";
+import { prepareFormData } from "public/utils";
 
-console.time('mainpagetimer')
+console.time("mainpagetimer");
 
- 
- $w.onReady(function () {
- // Prefetch
-     let response = wixSite.prefetchPageResources({
-         "pages": ["/vision", "/what-we-believe", "/starting-point"]
-     });
+const handleSubmit = (e) => {
+  const formData = prepareFormData(e);
+  return formData;
+};
 
-     if (response.errors) {
-         // handle errors
-     }
- });
- 
+$w.onReady(function () {
+  // Prefetch
+  let response = wixSite.prefetchPageResources({
+    pages: ["/vision", "/what-we-believe", "/starting-point"],
+  });
 
- $w.onReady(() => {
-     console.timeEnd('mainpagetimer')
-    
-     //$w("#videoPlayer1").poster = "https://static.wixstatic.com/media/77e3c1_d9fe192bfbf5406ba924a509df044dea~mv2.jpg"
- })
+  if (response.errors) {
+    // handle errors
+  }
+  $w(
+    "#wixFormOnline, #wixFormEast, #wixFormWest, #wixFormChinese, #wixFormLation"
+  ).onWixFormSubmit(handleSubmit);
+});
 
- //expand captcha after input
- export function inputFirstNameOnline_input(event) {
-     $w('#captchaOnline').expand();
- }
+$w.onReady(() => {
+  console.timeEnd("mainpagetimer");
 
- export function inputFirstNameEast_input(event) {
-     $w('#captchaEast').expand();
- }
+  //$w("#videoPlayer1").poster = "https://static.wixstatic.com/media/77e3c1_d9fe192bfbf5406ba924a509df044dea~mv2.jpg"
+});
 
- export function inputFirstNameWest_input(event) {
-     $w('#captchaWest').expand();
- }
+//expand captcha after input
+export function inputFirstNameOnline_input(event) {
+  $w("#captchaOnline").expand();
+}
 
- export function inputFirstNameLatino_input(event) {
-     $w('#captchaLatino').expand();
- }
+export function inputFirstNameEast_input(event) {
+  $w("#captchaEast").expand();
+}
 
- export function inputFullNameChinese_input(event) {
-     $w('#captchaChinese').expand();
- }
+export function inputFirstNameWest_input(event) {
+  $w("#captchaWest").expand();
+}
 
- //collapse form after submission
- export function wixFormOnline_wixFormSubmitted() {
-     //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-     $w("#textSelectACampus").scrollTo();
-     $w('#multiStateBox1').collapse();
-     //$w('#html1').expand();
-     $w('#imageThankYou').expand();
- }
+export function inputFirstNameLatino_input(event) {
+  $w("#captchaLatino").expand();
+}
 
- export function wixFormEast_wixFormSubmitted() {
-     //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-     $w("#textSelectACampus").scrollTo();
-     $w('#multiStateBox1').collapse();
-     //$w('#html1').expand();
-     $w('#imageThankYou').expand();
- }
+export function inputFullNameChinese_input(event) {
+  $w("#captchaChinese").expand();
+}
 
- export function wixFormWest_wixFormSubmitted() {
-     //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-     $w("#textSelectACampus").scrollTo();
-     $w('#multiStateBox1').collapse();
-     //$w('#html1').expand();
-     $w('#imageThankYou').expand();
- }
+//collapse form after submission
+export function wixFormOnline_wixFormSubmitted() {
+  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
+  $w("#textSelectACampus").scrollTo();
+  $w("#multiStateBox1").collapse();
+  //$w('#html1').expand();
+  $w("#imageThankYou").expand();
+}
 
- export function wixFormLatino_wixFormSubmitted() {
-     //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-     $w("#textSelectACampus").scrollTo();
-     $w('#multiStateBox1').collapse();
-     //$w('#html1').expand();
-     $w('#imageThankYou').expand();
- }
+export function wixFormEast_wixFormSubmitted() {
+  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
+  $w("#textSelectACampus").scrollTo();
+  $w("#multiStateBox1").collapse();
+  //$w('#html1').expand();
+  $w("#imageThankYou").expand();
+}
 
- export function wixFormChinese_wixFormSubmitted() {
-     //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-     $w("#textSelectACampus").scrollTo();
-     $w('#multiStateBox1').collapse();
-     //$w('#html1').expand();
-     $w('#imageThankYou').expand();
- }
+export function wixFormWest_wixFormSubmitted() {
+  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
+  $w("#textSelectACampus").scrollTo();
+  $w("#multiStateBox1").collapse();
+  //$w('#html1').expand();
+  $w("#imageThankYou").expand();
+}
 
- //Plan A Visit tabs/buttons
- export function buttonOnline_click(event) {
-     $w("#multiStateBox1").expand();
-     $w("#multiStateBox1").changeState("stateOnline");
-     $w("#buttonOnline").disable();
-     $w("#buttonEast").enable();
-     $w("#buttonWest").enable();
-     $w("#buttonLatino").enable();
-     $w("#buttonChinese").enable();
-     //$w("#html1").collapse();
-     $w('#imageThankYou').collapse();
- }
+export function wixFormLatino_wixFormSubmitted() {
+  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
+  $w("#textSelectACampus").scrollTo();
+  $w("#multiStateBox1").collapse();
+  //$w('#html1').expand();
+  $w("#imageThankYou").expand();
+}
 
- export function buttonEast_click(event) {
-     $w("#multiStateBox1").expand();
-     $w("#multiStateBox1").changeState("stateEast");
-     $w("#buttonOnline").enable();
-     $w("#buttonEast").disable();
-     $w("#buttonWest").enable();
-     $w("#buttonLatino").enable();
-     $w("#buttonChinese").enable();
-     //$w("#html1").collapse();
-     //$w("#stateEast").expand();
-     //$w("#stateWest").collapse();
-     $w('#imageThankYou').collapse();
- }
+export function wixFormChinese_wixFormSubmitted() {
+  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
+  $w("#textSelectACampus").scrollTo();
+  $w("#multiStateBox1").collapse();
+  //$w('#html1').expand();
+  $w("#imageThankYou").expand();
+}
 
- export function buttonWest_click(event) {
-     $w("#multiStateBox1").expand();
-     $w("#multiStateBox1").changeState("stateWest");
-     $w("#buttonOnline").enable();
-     $w("#buttonEast").enable();
-     $w("#buttonWest").disable();
-     $w("#buttonLatino").enable();
-     $w("#buttonChinese").enable();
-     //$w("#html1").collapse();
-     //$w("#stateEast").collapse();
-     //$w("#stateWest").expand();
-     $w('#imageThankYou').collapse();
- }
+//Plan A Visit tabs/buttons
+export function buttonOnline_click(event) {
+  $w("#multiStateBox1").expand();
+  $w("#multiStateBox1").changeState("stateOnline");
+  $w("#buttonOnline").disable();
+  $w("#buttonEast").enable();
+  $w("#buttonWest").enable();
+  $w("#buttonLatino").enable();
+  $w("#buttonChinese").enable();
+  //$w("#html1").collapse();
+  $w("#imageThankYou").collapse();
+}
 
- export function buttonLatino_click(event) {
-     $w("#multiStateBox1").expand();
-     $w("#multiStateBox1").changeState("stateLatino");
-     $w("#buttonOnline").enable();
-     $w("#buttonEast").enable();
-     $w("#buttonWest").enable();
-     $w("#buttonLatino").disable();
-     $w("#buttonChinese").enable();
-     //$w("#html1").collapse();
-     $w('#imageThankYou').collapse();
- }
+export function buttonEast_click(event) {
+  $w("#multiStateBox1").expand();
+  $w("#multiStateBox1").changeState("stateEast");
+  $w("#buttonOnline").enable();
+  $w("#buttonEast").disable();
+  $w("#buttonWest").enable();
+  $w("#buttonLatino").enable();
+  $w("#buttonChinese").enable();
+  //$w("#html1").collapse();
+  //$w("#stateEast").expand();
+  //$w("#stateWest").collapse();
+  $w("#imageThankYou").collapse();
+}
 
- export function buttonChinese_click(event) {
-     $w("#multiStateBox1").expand();
-     $w("#multiStateBox1").changeState("stateChinese");
-     $w("#buttonOnline").enable();
-     $w("#buttonEast").enable();
-     $w("#buttonWest").enable();
-     $w("#buttonLatino").enable();
-     $w("#buttonChinese").disable();
-     //$w("#html1").collapse();
-     $w('#imageThankYou').collapse();
- }
+export function buttonWest_click(event) {
+  $w("#multiStateBox1").expand();
+  $w("#multiStateBox1").changeState("stateWest");
+  $w("#buttonOnline").enable();
+  $w("#buttonEast").enable();
+  $w("#buttonWest").disable();
+  $w("#buttonLatino").enable();
+  $w("#buttonChinese").enable();
+  //$w("#html1").collapse();
+  //$w("#stateEast").collapse();
+  //$w("#stateWest").expand();
+  $w("#imageThankYou").collapse();
+}
 
+export function buttonLatino_click(event) {
+  $w("#multiStateBox1").expand();
+  $w("#multiStateBox1").changeState("stateLatino");
+  $w("#buttonOnline").enable();
+  $w("#buttonEast").enable();
+  $w("#buttonWest").enable();
+  $w("#buttonLatino").disable();
+  $w("#buttonChinese").enable();
+  //$w("#html1").collapse();
+  $w("#imageThankYou").collapse();
+}
+
+export function buttonChinese_click(event) {
+  $w("#multiStateBox1").expand();
+  $w("#multiStateBox1").changeState("stateChinese");
+  $w("#buttonOnline").enable();
+  $w("#buttonEast").enable();
+  $w("#buttonWest").enable();
+  $w("#buttonLatino").enable();
+  $w("#buttonChinese").disable();
+  //$w("#html1").collapse();
+  $w("#imageThankYou").collapse();
+}
