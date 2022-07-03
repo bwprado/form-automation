@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 /**
  * @author Threed Software
  * @description File to manage the main utilities needed throughout the website
@@ -95,13 +97,26 @@ export async function collapseElementsInRepeater(elementId, repeaterId) {
 }
 
 /**
- * @function camelCase
- * @description This function converts the string to camel case.
- * @param str - string to be camel cased
- * @returns {string} - camel cased string
+ * @function handlePromises
+ * @description This function is used to handle promises
+ * @param {Promise} promise
+ * @returns {Promise}
  */
-export const camelCase = (str) =>
-  str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+export const handlePromises = (promise) =>
+  promise.then((res) => [null, res]).catch((err) => [err]);
+
+/**
+ * @function changeFieldName
+ * @description This function is used to change the fields name.
+ * @param fieldName - The field name to change.
+ * @returns {string} - The new field name, camel cased.
+ */
+const changeFieldName = (fieldName) => {
+  const regex = /(?:Online|Latino|Chinese|East|West|input|dropdown|radio)/g;
+  const str = fieldName.replace(regex, "");
+  const cameldCase = _.camelCase(str);
+  return cameldCase.replace("datePicker", "date").replace("kids", "children");
+};
 
 /**
  * @typedef {object} EventObject
@@ -117,22 +132,14 @@ export const camelCase = (str) =>
  * @param {EventObject} data Event object data
  * @returns {object}
  */
-const prepareFormData = (data) => {
-  let newObj = {};
-  let { submissionData, formName, contactId } = data;
-  submissionData.forEach((d) => {
-    newObj[d.fieldName] = d.fieldValue;
+export const prepareFormData = (event) => {
+  let { fields } = event;
+  const newFields = fields.map((field) => {
+    return {
+      fieldName: changeFieldName(field.id),
+      fieldValue: field.fieldValue,
+    };
   });
-  newObj.formName = formName;
-  newObj.contactId = contactId;
-  return newObj;
-};
 
-/**
- * @function handlePromises
- * @description This function is used to handle promises
- * @param {Promise} promise
- * @returns {Promise}
- */
-export const handlePromises = (promise) =>
-  promise.then((res) => [null, res]).catch((err) => [err]);
+  return newFields;
+};
