@@ -125,34 +125,18 @@ const changeFieldName = (fieldName) => {
  * @property {object[]} EventObject.fields - Form's data
  */
 /**
- * @typedef {object} FormData
- * @property {string} FormData.firstName - Contact's first name.
- * @property {string} [FormData.fullName] - Contact's full name for Chinese Form.
- * @property {string} [FormData.englishName] - Contact's english name for Chinese Form.
- * @property {string} FormData.lastName - Contact's last name.
- * @property {string} FormData.email - Contact's email.
- * @property {string} [FormData.phone] - Contact's phone.
- * @property {string} FormData.captcha - Form captcha.
- * @property {string} FormData.date - Planned visit date.
- * @property {string} FormData.children - Children's attendance.
- * @property {string} [FormData.kids] - Children ages.
- * @property {string} FormData.contact - Personal assistance on visit.
- * @property {string} FormData.message - Form message.
- */
 /**
  * @function prepareFormData
  * @description This function changes the data structure for better usage.
- * @param {EventObject} data Event object data
- * @returns {FormData}
+ * @param {EventObject} event Event object data
+ * @returns {object[]}
  */
 export const prepareFormData = (event) => {
   let { fields } = event;
-  const newFields = fields.map((field) => {
+  return fields.map((field) => {
     return {
       fieldName: changeFieldName(field.id),
       fieldValue: field.fieldValue,
     };
   });
-
-  return newFields;
 };
