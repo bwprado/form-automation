@@ -1,4 +1,4 @@
-import { sendEmailToStaffDepartment } from "backend/form-automation/init";
+import { formAutomation } from "backend/form-automation/init";
 
 /**
  * @function wixCrm_onFormSubmit
@@ -6,5 +6,5 @@ import { sendEmailToStaffDepartment } from "backend/form-automation/init";
  * @param {object} event - Event object
  */
 export const wixCrm_onFormSubmit = async (event) => {
-  await sendEmailToStaffDepartment(event);
+  await formAutomation(event);
 };
