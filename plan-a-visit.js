@@ -30,12 +30,7 @@ $w.onReady(function () {
   $w(
     "#wixFormOnline, #wixFormEast, #wixFormWest, #wixFormChinese, #wixFormLation"
   ).onWixFormSubmit(handleSubmit);
-});
-
-$w.onReady(() => {
   console.timeEnd("mainpagetimer");
-
-  //$w("#videoPlayer1").poster = "https://static.wixstatic.com/media/77e3c1_d9fe192bfbf5406ba924a509df044dea~mv2.jpg"
 });
 
 //expand captcha after input
