@@ -7,7 +7,7 @@ console.time("mainpagetimer");
  * @function handleSubmit
  * @description This function is triggered on form submission.
  * @param {object} e - Event object
- * @returns {object} Form data.
+ * @returns {Array|boolean} Form data.
  */
 const handleSubmit = (e) => {
   const formData = prepareFormData(e);
