@@ -31,7 +31,11 @@ const prepareEmailData = (event) => {
   variables.location = settings.location[formName];
   variables.children = variables.children === "children-yes" ? "Yes" : "No";
   variables.contact = variables.contact === "contact-yes" ? "Yes" : "No";
-  let dateOfService = retrieveDateAndTime(variables.service, variables.date);
+  let dateOfService = retrieveDateAndTime(
+    variables.service,
+    variables.date,
+    formName
+  );
   variables.date = dateOfService.date.toLocaleDateString("en-US", dateOptions);
   variables.serviceTime = dateOfService.time || "";
   variables.service = variables.service === "online" ? "Online" : "In-Person";
