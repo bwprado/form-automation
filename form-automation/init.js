@@ -65,11 +65,7 @@ export const sendEmailToStaffDepartment = async (
   email
 ) => {
   const [error, { items: staff }] = await handlePromises(
-    wixData
-      .query("Staff")
-      .hasSome("staffDepartment", departmentId)
-      .eq("lastName", "Prado") //TESTING PURPOSES
-      .find()
+    wixData.query("Staff").hasSome("staffDepartment", departmentId).find()
   );
 
   if (error) throw new Error(error);
@@ -103,11 +99,7 @@ export const sendEmailToStaffDepartment = async (
  */
 export const sendEmailToCampuses = async (campusId, emailId, email) => {
   const [error, { items: staff }] = await handlePromises(
-    wixData
-      .query("Staff")
-      .hasSome("staffCampus", campusId)
-      .eq("lastName", "Prado") //TESTING PURPOSES
-      .find()
+    wixData.query("Staff").hasSome("staffCampus", campusId).find()
   );
 
   if (error) throw new Error(error);
