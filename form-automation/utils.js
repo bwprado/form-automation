@@ -49,27 +49,22 @@ export const prepareFormData = (event) => {
 /**
  * @function retrieveDateAndTime
  * @description This function retrieves the date and time of the planned visit.
- * @param {string} timeStr - string like 8-east
+ * @param {string} timeStr - string like 8:00
  * @param {string} dateStr - string in the format of "Sun Jul 03 2022 00:00:00 GMT-0300 (Brasilia Standard Time)"
  * @returns {object} - object with the date and time of the planned visit
  */
-export const retrieveDateAndTime = (timeStr, dateStr) => {
+export const retrieveDateAndTime = (timeStr, dateStr, formName) => {
   let dateObj = {};
+  const time = timeStr
+    ? timeStr
+    : formName.includes("Chinese")
+    ? "9:30"
+    : "10:30";
+  const hour = +time.split(":")[0];
+  const min = +time.split(":")[1];
   dateObj.date = new Date(dateStr);
-
-  const isThereTime = /\d/.test(timeStr);
-  if (isThereTime) {
-    const newTimeStr = timeStr.split("-")[0];
-    dateObj.timezone =
-      timeStr.split("-")[1].charAt(0).toUpperCase() ||
-      "" + timeStr.split("-")[1].slice(1) ||
-      "";
-    dateObj.time = newTimeStr.slice(0, 2) + ":" + newTimeStr.slice(2) || "";
-    dateObj.date.setHours(
-      +dateObj.time.split(":")[0],
-      +dateObj.time.split(":")[1] || 0
-    );
-  }
+  dateObj.date.setHours(hour, min);
+  dateObj.time = dateObj.date.toLocaleTimeString("en-US");
 
   return dateObj;
 };
