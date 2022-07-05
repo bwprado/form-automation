@@ -1,126 +1,50 @@
 import * as settings from "public/form-automation/settings";
-import { retrieveDateAndTime } from "public/form-automation/utils";
+import { prepareEmailData, handlePromises } from "public/form-automation/utils";
 import { triggeredEmails, contacts } from "wix-crm-backend";
-import { handlePromises } from "public/form-automation/utils";
 import wixData from "wix-data";
-
-/**
- * @typedef {object} EventObject
- * @property {string} EventObject.formName - Wix Form Name
- * @property {object} EventObject.contactId - Wix Form Contact ID
- * @property {Array<{fieldName: string, fieldValue: string}>} submissionData - Data submitted to form
- */
-/**
- * @function prepareEmailData
- * @description This function changes the data structure for email data.
- * @param {EventObject} event Form data to be converted
- * @returns {object} email variables
- */
-const prepareEmailData = (event) => {
-  const dateOptions = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  const { submissionData, formName } = event;
-  let variables = {};
-  submissionData.forEach((d) => {
-    d.fieldName !== "captcha" && (variables[d.fieldName] = d.fieldValue);
-  });
-  variables.location = settings.location[formName];
-  variables.children = variables.children === "children-yes" ? "Yes" : "No";
-  variables.contact = variables.contact === "contact-yes" ? "Yes" : "No";
-  let dateOfService = retrieveDateAndTime(
-    variables.service,
-    variables.date,
-    formName
-  );
-  variables.date = dateOfService.date.toLocaleDateString("en-US", dateOptions);
-  variables.serviceTime = dateOfService.time || "";
-  variables.service = variables.service === "online" ? "Online" : "In-Person";
-  return { variables };
-};
-
-/**
- * @function checkForChildrenInclusion
- * @description This function checks for the children answers and returns the answer
- * @param {object} data - The data object
- * @returns {boolean} true or false
- */
-const checkForChildrenInclusion = (data) =>
-  data.some((item) => item.fieldValue.includes("children-yes"));
 
 /**
  * @function sendEmailToStaffDepartment
  * @description This function sends emails to staff department
- * @param {string} departmentId - Department's id
- * @param {string} emailId - Email's id
- * @param {object} email - The email object
+ * @param {object} emailData - The email object
+ * @property {object} emailData.variables - The email variables
  * @returns {Promise<object>}
  */
-export const sendEmailToStaffDepartment = async (
-  departmentId,
-  emailId,
-  email
-) => {
-  const [error, { items: staff }] = await handlePromises(
-    wixData.query("Staff").hasSome("staffDepartment", departmentId).find()
+export const sendEmailToStaffDepartment = async (emailData) => {
+  const options = { suppressAuth: true };
+  const { variables } = emailData;
+  const selectedStaff =
+    variables.children === "Yes" ? "staff" : "staffChildren";
+  const [error, { items }] = await handlePromises(
+    wixData
+      .query("StaffRedirect")
+      .eq("title", variables.formName)
+      .include(selectedStaff)
+      .find()
   );
 
   if (error) throw new Error(error);
-  if (staff.length === 0) return;
-
+  if (items.length === 0) return;
+  const staff = items[0][selectedStaff];
   let emails = [];
+
+  emails.push("bwprado@gmail.com"); // DEV TESTING - REMOVE IN PRODUCTION
+
   staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
   const [err, { items: staffContacts }] = await handlePromises(
-    contacts.queryContacts().hasSome("info.emails.email", emails).find()
+    contacts.queryContacts().hasSome("info.emails.email", emails).find(options)
   );
 
   if (err) throw new Error(err);
 
   const allStaffEmails = staffContacts.map((contact) =>
-    triggeredEmails.emailMember(emailId, contact._id, email)
+    triggeredEmails.emailMember(settings.STAFF_EMAIL_ID, contact._id, emailData)
   );
   const [err2] = await handlePromises(Promise.all(allStaffEmails));
 
   if (err2) throw new Error(err2);
 
   console.log("Email sent to staff department");
-};
-
-/**
- * @function sendEmailToCampuses
- * @description This function sends emails to staff campuses
- * @param {string} campusId - Campuses id
- * @param {string} emailId - Email's id
- * @param {object} email - The email object
- * @returns {Promise<object>}
- */
-export const sendEmailToCampuses = async (campusId, emailId, email) => {
-  const [error, { items: staff }] = await handlePromises(
-    wixData.query("Staff").hasSome("staffCampus", campusId).find()
-  );
-
-  if (error) throw new Error(error);
-  if (staff.length === 0) return;
-
-  let emails = [];
-  staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
-  const [err, { items: staffContacts }] = await handlePromises(
-    contacts.queryContacts().hasSome("info.emails.email", emails).find()
-  );
-
-  if (err) throw new Error(err);
-
-  const allStaffEmails = staffContacts.map((contact) =>
-    triggeredEmails.emailMember(emailId, contact._id, email)
-  );
-  const [err2] = await handlePromises(Promise.all(allStaffEmails));
-
-  if (err2) throw new Error(err2);
-
-  console.log("Email sent to staff campuses");
 };
 
 /**
@@ -144,34 +68,27 @@ export const sendEmailToPlannedVisitor = async (contactId, email) => {
  * @param {object} event - Event Object
  */
 export const formAutomation = async (event) => {
-  const { submissionData, contactId, formName } = event;
-  const bringChildren = checkForChildrenInclusion(submissionData);
-  const email = prepareEmailData(event);
-  if (bringChildren) {
-    const [error] = await handlePromises(
-      sendEmailToStaffDepartment(
-        settings.departments["children"],
-        settings.STAFF_EMAIL_ID,
-        email
-      )
-    );
+  const options = { suppressAuth: true };
+  const { fields } = event;
+  const emailData = prepareEmailData(fields);
+  const { variables } = emailData;
+  const [error, { items: contact }] = await handlePromises(
+    contacts
+      .queryContacts()
+      .hasSome("info.emails.email", variables.email)
+      .find(options)
+  );
 
-    if (error) throw new Error(error);
-    console.log("Email was sent to children department");
-  }
+  if (error) throw new Error(error);
+
+  if (contact.length === 0) throw new Error("Contact not found");
+
+  const [err] = await handlePromises(sendEmailToStaffDepartment(emailData));
+
+  if (err) throw new Error(err);
   const [err1] = await handlePromises(
-    sendEmailToCampuses(
-      settings.campuses[formName],
-      settings.STAFF_EMAIL_ID,
-      email
-    )
+    sendEmailToPlannedVisitor(contact[0]._id, emailData)
   );
 
-  if (err1) return err1;
-
-  const [err2] = await handlePromises(
-    sendEmailToPlannedVisitor(contactId, email)
-  );
-
-  if (err2) return err2;
+  if (err1) throw Error(err1);
 };

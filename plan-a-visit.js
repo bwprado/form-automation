@@ -1,18 +1,14 @@
 import wixSite from "wix-site";
-import { prepareFormData } from "public/form-automation/utils";
+import { formAutomation } from "backend/form-automation/init";
 
 console.time("mainpagetimer");
 
 /**
- * @function handleSubmit
+ * @function handleSubmission
  * @description This function is triggered on form submission.
  * @param {object} e - Event object
- * @returns {Array|boolean} Form data.
  */
-const handleSubmit = (e) => {
-  const formData = prepareFormData(e);
-  return formData;
-};
+const handleSubmission = async (e) => await formAutomation(e);
 
 $w.onReady(function () {
   // Prefetch
@@ -29,7 +25,7 @@ $w.onReady(function () {
    */
   $w(
     "#wixFormOnline, #wixFormEast, #wixFormWest, #wixFormChinese, #wixFormLation"
-  ).onWixFormSubmit(handleSubmit);
+  ).onWixFormSubmitted(handleSubmission);
   console.timeEnd("mainpagetimer");
 });
 

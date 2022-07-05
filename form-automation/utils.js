@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { location } from "public/form-automation/settings";
 /**
  * @function handlePromises
  * @description This function is used to handle promises
@@ -24,26 +25,19 @@ const changeFieldName = (fieldName) => {
 };
 
 /**
- * @typedef {object} EventObject
- * @property {object} EventObject.context - Wix Form Context
- * @property {string} EventObject.type - Wix Form Event Type
- * @property {object[]} EventObject.fields - Form's data
- */
-/**
-/**
  * @function prepareFormData
  * @description This function changes the data structure for better usage.
- * @param {EventObject} event Event object data
- * @returns {object[]}
+ * @param {Array<object>} fields Form fields array
+ * @returns {Array<object>}
  */
-export const prepareFormData = (event) => {
-  let { fields } = event;
-  return fields.map((field) => {
-    return {
-      fieldName: changeFieldName(field.id),
-      fieldValue: field.fieldValue,
-    };
+export const prepareFormData = (fields) => {
+  const regex = /(captcha|date)/g;
+  fields.forEach((field) => {
+    if (regex.test(field.id)) return;
+    if (field.id.includes("radio")) return;
+    field.fieldValue = `${changeFieldName(field.id)} | ${field.fieldValue}`;
   });
+  return fields;
 };
 
 /**
@@ -55,11 +49,7 @@ export const prepareFormData = (event) => {
  */
 export const retrieveDateAndTime = (timeStr, dateStr, formName) => {
   let dateObj = {};
-  const time = timeStr
-    ? timeStr
-    : formName.includes("Chinese")
-    ? "9:30"
-    : "10:30";
+  const time = formName === "Chinese" ? "9:30" : timeStr || "10:30";
   const hour = +time.split(":")[0];
   const min = +time.split(":")[1];
   dateObj.date = new Date(dateStr);
@@ -67,4 +57,42 @@ export const retrieveDateAndTime = (timeStr, dateStr, formName) => {
   dateObj.time = dateObj.date.toLocaleTimeString("en-US");
 
   return dateObj;
+};
+
+/**
+ * @typedef {Array<Object>} FormFields
+ */
+
+/**
+ * @function prepareEmailData
+ * @description This function changes the data structure for email data.
+ * @param {FormFields} fields Form data fields to convert to email.
+ * @returns {object} email variables
+ */
+export const prepareEmailData = (fields) => {
+  const formName = fields[0].id
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .split(" ")
+    .slice(-1)[0];
+  const dateOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+  let variables = {};
+  fields.forEach((d) => (variables[changeFieldName(d.id)] = d.fieldValue));
+  variables.children = variables.children === "children-yes" ? "Yes" : "No";
+  variables.contact = variables.contact === "contact-yes" ? "Yes" : "No";
+  let dateOfService = retrieveDateAndTime(
+    variables.service,
+    variables.date,
+    formName
+  );
+  variables.date = dateOfService.date.toLocaleDateString("en-US", dateOptions);
+  variables.service = formName === "Online" ? formName : "In-Person";
+  variables.serviceTime = dateOfService.time || "";
+  variables.location = location[formName];
+  variables.formName = formName;
+  return { variables };
 };
