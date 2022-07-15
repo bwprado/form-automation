@@ -13,8 +13,7 @@ import wixData from "wix-data";
 export const sendEmailToStaffDepartment = async (emailData) => {
   const options = { suppressAuth: true };
   const { variables } = emailData;
-  const selectedStaff =
-    variables.children === "Yes" ? "staff" : "staffChildren";
+  const selectedStaff = variables.children === "No" ? "staff" : "staffChildren";
   const [error, { items }] = await handlePromises(
     wixData
       .query("StaffRedirect")
@@ -27,10 +26,10 @@ export const sendEmailToStaffDepartment = async (emailData) => {
   if (items.length === 0) return;
   const staff = items[0][selectedStaff];
   let emails = [];
+  staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
 
   emails.push("bwprado@gmail.com"); // DEV TESTING - REMOVE IN PRODUCTION
 
-  staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
   const [err, { items: staffContacts }] = await handlePromises(
     contacts.queryContacts().hasSome("info.emails.email", emails).find(options)
   );
