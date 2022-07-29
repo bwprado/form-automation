@@ -62,8 +62,7 @@ export const sendEmailToStaffDepartment = async (emailData) => {
         emailData
       );
     } catch (error) {
-      console.log(contact);
-      console.error(error);
+      console.log("Unable to send email to staff", contact);
     }
   });
 
