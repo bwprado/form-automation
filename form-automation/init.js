@@ -3,6 +3,24 @@ import { prepareEmailData, handlePromises } from "public/form-automation/utils";
 import { triggeredEmails, contacts } from "wix-crm-backend";
 import wixData from "wix-data";
 
+const getChildrenStaff = async (formName) => {
+  let emails = [];
+  const [error, { items }] = await handlePromises(
+    wixData
+      .query("StaffRedirect")
+      .eq("title", formName)
+      .include("staffChildren")
+      .find()
+  );
+
+  if (error) throw new Error(error);
+  if (items.length === 0) return;
+
+  const staff = items[0]["staffChildren"];
+  staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
+  return emails;
+};
+
 /**
  * @function sendEmailToStaffDepartment
  * @description This function sends emails to staff department
@@ -13,35 +31,41 @@ import wixData from "wix-data";
 export const sendEmailToStaffDepartment = async (emailData) => {
   const options = { suppressAuth: true };
   const { variables } = emailData;
-  const selectedStaff = variables.children === "No" ? "staff" : "staffChildren";
+  const { children, formName } = variables;
   const [error, { items }] = await handlePromises(
-    wixData
-      .query("StaffRedirect")
-      .eq("title", variables.formName)
-      .include(selectedStaff)
-      .find()
+    wixData.query("StaffRedirect").eq("title", formName).include("staff").find()
   );
-
   if (error) throw new Error(error);
   if (items.length === 0) return;
-  const staff = items[0][selectedStaff];
+
+  const staff = items[0]["staff"];
   let emails = [];
   staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
 
   emails.push("bwprado@gmail.com"); // DEV TESTING - REMOVE IN PRODUCTION
 
+  emails =
+    children === "Yes"
+      ? [...emails, ...(await getChildrenStaff(formName))]
+      : emails;
+
   const [err, { items: staffContacts }] = await handlePromises(
     contacts.queryContacts().hasSome("info.emails.email", emails).find(options)
   );
-
   if (err) throw new Error(err);
 
-  const allStaffEmails = staffContacts.map((contact) =>
-    triggeredEmails.emailMember(settings.STAFF_EMAIL_ID, contact._id, emailData)
-  );
-  const [err2] = await handlePromises(Promise.all(allStaffEmails));
-
-  if (err2) throw new Error(err2);
+  staffContacts.map((contact) => {
+    try {
+      triggeredEmails.emailMember(
+        settings.STAFF_EMAIL_ID,
+        contact._id,
+        emailData
+      );
+    } catch (error) {
+      console.log(contact);
+      console.error(error);
+    }
+  });
 
   console.log("Email sent to staff department");
 };
@@ -77,17 +101,14 @@ export const formAutomation = async (event) => {
       .hasSome("info.emails.email", variables.email)
       .find(options)
   );
-
   if (error) throw new Error(error);
-
   if (contact.length === 0) throw new Error("Contact not found");
 
   const [err] = await handlePromises(sendEmailToStaffDepartment(emailData));
-
   if (err) throw new Error(err);
+
   const [err1] = await handlePromises(
     sendEmailToPlannedVisitor(contact[0]._id, emailData)
   );
-
   if (err1) throw Error(err1);
 };
