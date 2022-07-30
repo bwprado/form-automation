@@ -5,6 +5,6 @@ export const location = {
   Online: "Boulevard Online",
   East: "East Campus",
   West: "West Campus",
-  Lation: "Latino Campus",
+  Latino: "Latino Campus",
   Chinese: "Chinese Campus",
 };
