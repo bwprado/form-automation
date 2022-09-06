@@ -3,8 +3,20 @@ import { prepareEmailData, handlePromises } from "public/form-automation/utils";
 import { triggeredEmails, contacts } from "wix-crm-backend";
 import wixData from "wix-data";
 
-const getChildrenStaff = async (formName) => {
-  let emails = [];
+export const sendTriggeredEmail = async (contacts, emailId, emailData) => {
+  contacts.map((contact) => {
+    try {
+      triggeredEmails.emailContact(emailId, contact._id, emailData);
+    } catch (error) {
+      console.error("Unable to send email to staff", contact);
+    }
+  });
+};
+
+const sendEmailToChildrenStaffDepartment = async (emailData) => {
+  const options = { suppressAuth: true };
+  const { variables } = emailData;
+  const { formName } = variables;
   const [error, { items }] = await handlePromises(
     wixData
       .query("StaffRedirect")
@@ -12,13 +24,25 @@ const getChildrenStaff = async (formName) => {
       .include("staffChildren")
       .find()
   );
-
   if (error) throw new Error(error);
   if (items.length === 0) return;
 
-  const staff = items[0]["staffChildren"];
-  staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
-  return emails;
+  const staffEmails = items[0]["staffChildren"]
+    .filter(({ staffEmail }) => staffEmail)
+    .map(({ staffEmail }) => staffEmail);
+
+  const [err, { items: childrenStaffContacts }] = await handlePromises(
+    contacts
+      .queryContacts()
+      .hasSome("info.emails.email", staffEmails)
+      .find(options)
+  );
+  if (err) throw new Error(err);
+
+  sendTriggeredEmail(childrenStaffContacts, settings.STAFF_CHILD_EMAIL_ID, {
+    variables
+  });
+  console.log("Email sent to children staff department");
 };
 
 /**
@@ -38,35 +62,22 @@ export const sendEmailToStaffDepartment = async (emailData) => {
   if (error) throw new Error(error);
   if (items.length === 0) return;
 
-  const staff = items[0]["staff"];
-  let emails = [];
-  staff.forEach(({ staffEmail }) => staffEmail && emails.push(staffEmail));
-
-  emails.push("bwprado@gmail.com"); // DEV TESTING - REMOVE IN PRODUCTION
-
-  emails =
-    children === "Yes"
-      ? [...emails, ...(await getChildrenStaff(formName))]
-      : emails;
+  const staffEmails = items[0]["staff"]
+    .filter(({ staffEmail }) => staffEmail)
+    .map(({ staffEmail }) => staffEmail);
 
   const [err, { items: staffContacts }] = await handlePromises(
-    contacts.queryContacts().hasSome("info.emails.email", emails).find(options)
+    contacts
+      .queryContacts()
+      .hasSome("info.emails.email", staffEmails)
+      .find(options)
   );
   if (err) throw new Error(err);
 
-  staffContacts.map((contact) => {
-    try {
-      triggeredEmails.emailMember(
-        settings.STAFF_EMAIL_ID,
-        contact._id,
-        emailData
-      );
-    } catch (error) {
-      console.log("Unable to send email to staff", contact);
-    }
-  });
-
+  sendTriggeredEmail(staffContacts, settings.STAFF_EMAIL_ID, { variables });
   console.log("Email sent to staff department");
+
+  children === "Yes" && sendEmailToChildrenStaffDepartment(emailData);
 };
 
 /**
