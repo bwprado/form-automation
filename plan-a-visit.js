@@ -4,16 +4,30 @@ import { formAutomation } from "backend/form-automation/init";
 console.time("mainpagetimer");
 
 /**
+ * @function thankYouMessage
+ * @description This function thanks the visitor for the form input
+ */
+const thankYouMessage = () => {
+  $w("#textSelectACampus").scrollTo();
+  $w("#multiStateBox1").collapse();
+  $w("#lottieThankYou").expand();
+  $w("#lottieThankYou").play();
+};
+
+/**
  * @function handleSubmission
  * @description This function is triggered on form submission.
  * @param {object} e - Event object
  */
-const handleSubmission = async (e) => await formAutomation(e);
+const handleSubmission = (e) => {
+  formAutomation(e);
+  thankYouMessage();
+};
 
 $w.onReady(function () {
   // Prefetch
   let response = wixSite.prefetchPageResources({
-    pages: ["/vision", "/what-we-believe", "/starting-point"],
+    pages: ["/vision", "/what-we-believe", "/starting-point"]
   });
 
   if (response.errors) {
@@ -24,8 +38,9 @@ $w.onReady(function () {
    * @description Handles all form submissions at once.
    */
   $w(
-    "#wixFormOnline, #wixFormEast, #wixFormWest, #wixFormChinese, #wixFormLation"
+    "#wixFormOnline, #wixFormEast, #wixFormWest, #wixFormChinese, #wixFormLatino"
   ).onWixFormSubmitted(handleSubmission);
+
   console.timeEnd("mainpagetimer");
 });
 
@@ -50,47 +65,6 @@ export function inputFullNameChinese_input(event) {
   $w("#captchaChinese").expand();
 }
 
-//collapse form after submission
-export function wixFormOnline_wixFormSubmitted() {
-  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-  $w("#textSelectACampus").scrollTo();
-  $w("#multiStateBox1").collapse();
-  //$w('#html1').expand();
-  $w("#imageThankYou").expand();
-}
-
-export function wixFormEast_wixFormSubmitted() {
-  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-  $w("#textSelectACampus").scrollTo();
-  $w("#multiStateBox1").collapse();
-  //$w('#html1').expand();
-  $w("#imageThankYou").expand();
-}
-
-export function wixFormWest_wixFormSubmitted() {
-  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-  $w("#textSelectACampus").scrollTo();
-  $w("#multiStateBox1").collapse();
-  //$w('#html1').expand();
-  $w("#imageThankYou").expand();
-}
-
-export function wixFormLatino_wixFormSubmitted() {
-  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-  $w("#textSelectACampus").scrollTo();
-  $w("#multiStateBox1").collapse();
-  //$w('#html1').expand();
-  $w("#imageThankYou").expand();
-}
-
-export function wixFormChinese_wixFormSubmitted() {
-  //$w('#textForm').text = "Thank you, we look forward to seeing you!";
-  $w("#textSelectACampus").scrollTo();
-  $w("#multiStateBox1").collapse();
-  //$w('#html1').expand();
-  $w("#imageThankYou").expand();
-}
-
 //Plan A Visit tabs/buttons
 export function buttonOnline_click(event) {
   $w("#multiStateBox1").expand();
@@ -100,8 +74,10 @@ export function buttonOnline_click(event) {
   $w("#buttonWest").enable();
   $w("#buttonLatino").enable();
   $w("#buttonChinese").enable();
-  //$w("#html1").collapse();
-  $w("#imageThankYou").collapse();
+  $w("#html1Select").collapse();
+  $w("#lottieThankYou").collapse();
+  //$w("#html2ThankYou").collapse();
+  //$w("#imageThankYou").collapse();
 }
 
 export function buttonEast_click(event) {
@@ -112,10 +88,12 @@ export function buttonEast_click(event) {
   $w("#buttonWest").enable();
   $w("#buttonLatino").enable();
   $w("#buttonChinese").enable();
-  //$w("#html1").collapse();
+  $w("#html1Select").collapse();
+  //$w("#html2ThankYou").collapse();
+  $w("#lottieThankYou").collapse();
   //$w("#stateEast").expand();
   //$w("#stateWest").collapse();
-  $w("#imageThankYou").collapse();
+  //$w("#imageThankYou").collapse();
 }
 
 export function buttonWest_click(event) {
@@ -126,10 +104,12 @@ export function buttonWest_click(event) {
   $w("#buttonWest").disable();
   $w("#buttonLatino").enable();
   $w("#buttonChinese").enable();
-  //$w("#html1").collapse();
+  $w("#html1Select").collapse();
+  //$w("#html2ThankYou").collapse();
+  $w("#lottieThankYou").collapse();
   //$w("#stateEast").collapse();
   //$w("#stateWest").expand();
-  $w("#imageThankYou").collapse();
+  //$w("#imageThankYou").collapse();
 }
 
 export function buttonLatino_click(event) {
@@ -140,8 +120,10 @@ export function buttonLatino_click(event) {
   $w("#buttonWest").enable();
   $w("#buttonLatino").disable();
   $w("#buttonChinese").enable();
-  //$w("#html1").collapse();
-  $w("#imageThankYou").collapse();
+  $w("#html1Select").collapse();
+  $w("#lottieThankYou").collapse();
+  //$w("#html2ThankYou").collapse();
+  //$w("#imageThankYou").collapse();
 }
 
 export function buttonChinese_click(event) {
@@ -152,6 +134,8 @@ export function buttonChinese_click(event) {
   $w("#buttonWest").enable();
   $w("#buttonLatino").enable();
   $w("#buttonChinese").disable();
-  //$w("#html1").collapse();
-  $w("#imageThankYou").collapse();
+  $w("#html1Select").collapse();
+  $w("#lottieThankYou").collapse();
+  //$w("#html2ThankYou").collapse();
+  //$w("#imageThankYou").collapse();
 }
