@@ -76,7 +76,7 @@ export async function getEventsxml() {
 }
 
 /**
- * @author Threed Software
+ * @author Bruno Prado for Threed Software
  * @description Returns a list of events in ICS format string from the Events collection
  * @param {any} request
  * @returns {Promise<any>}
@@ -85,7 +85,8 @@ export async function get_eventsxml(request) {
   const ics = require("ics")
   let options = {
     headers: {
-      "Content-Type": "text/document"
+      "Content-Type": "text/calendar",
+      "Content-Disposition": "attachment; filename=events.ics"
     }
   }
 
@@ -149,10 +150,13 @@ export async function get_eventsxml(request) {
     )
     const wixUrl = icsFile?.fileUrl
 
-    if (!wixUrl) return serverError("No file URL returned")
+    if (!wixUrl) {
+      options.body = { error: "No file URL returned" }
+      return serverError(options)
+    }
 
     const downloadUrl = await mediaManager.getFileUrl(wixUrl)
-    return redirect(downloadUrl, "200")
+    return redirect(downloadUrl, "302")
   } catch (error) {
     return serverError(error)
   }
