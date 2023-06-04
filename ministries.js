@@ -34,8 +34,8 @@ $w.onReady(async function () {
     .setFilter(wixData.filter().ne('hideMinistry', true))
     .then(count2)
   /*
-    $w("#repeater1").onItemReady(($item, itemData, index) => {
-       $item("#buttonContact").link = "mailto:" + itemData.lifeGroupContact + "?subject=LIFE group";
+  $w("#repeater1").onItemReady(($item, itemData, index) => {
+      $item("#buttonContact").link = "mailto:" + itemData.lifeGroupContact + "?subject=LIFE group";
     });
     */
 
