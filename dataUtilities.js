@@ -9,7 +9,12 @@ import { fetch } from 'wix-fetch'
 // Code written in public files is shared by your site's
 // Backend, page code, and site code environments.
 
-// getAllData retrieves all data using the hasNext and Next capabilities
+/**
+ * This function retrieves all data from a collection using the hasNext and next capabilities
+ * @author {Chris Derrell}
+ * @param {string} dataCollection - the name of the collection to retrieve data from
+ * @returns {Promise<any[]>}
+ */
 export async function getAllData(dataCollection) {
   let results = await wixData
     .query('Ministries')
