@@ -81,6 +81,7 @@ async function prepareRepeater($item, itemData) {
  */
 async function buildCampus() {
   // get non-duplicate provider id from the database
+  try {
     let resCampus = await wixData
       .query('Ministries')
       .ne('hideMinistry', true)
@@ -102,9 +103,9 @@ async function buildCampus() {
       },
       ...res.items.map((el) => ({ label: el.title, value: el._id }))
     ]
-  // console.log({ options })
-
-  $w('#dropdownType').options = options
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 function filterTypeDropdown() {
