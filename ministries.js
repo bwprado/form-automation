@@ -27,7 +27,7 @@ $w.onReady(async function () {
     $w('#repeater1').onItemReady(prepareRepeater)
   })
   // filters, reset button, repeater image
-  buildCampus()
+  $w('#dropdownType').options = await buildCampus()
   filterTypeDropdown()
 
   $w('#datasetMinistries')
@@ -81,27 +81,27 @@ async function prepareRepeater($item, itemData) {
  */
 async function buildCampus() {
   // get non-duplicate provider id from the database
-  let resCampus = await wixData
-    .query('Ministries')
-    .ne('hideMinistry', true)
-    .limit(999)
-    .distinct('ministryType')
+    let resCampus = await wixData
+      .query('Ministries')
+      .ne('hideMinistry', true)
+      .limit(999)
+      .distinct('ministryType')
   // console.log({ resCampus });
 
-  let res = await wixData
-    .query('MinistryTypes')
-    .hasSome('_id', resCampus.items)
-    .limit(999)
-    .ascending('title')
-    .find()
-  // console.log({ res })
-  let options = [
-    {
-      label: 'All',
-      value: 'all'
-    },
-    ...res.items.map((el) => ({ label: el.title, value: el._id }))
-  ]
+    let res = await wixData
+      .query('MinistryTypes')
+      .hasSome('_id', resCampus?.items || [])
+      .limit(999)
+      .ascending('title')
+      .find()
+
+    return [
+      {
+        label: 'All',
+        value: 'all'
+      },
+      ...res.items.map((el) => ({ label: el.title, value: el._id }))
+    ]
   // console.log({ options })
 
   $w('#dropdownType').options = options
