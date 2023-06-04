@@ -116,7 +116,7 @@ function filterTypeDropdown() {
     if ($w('#dropdownType').value === 'all') {
       $w('#datasetMinistries')
         .setFilter(wixData.filter().ne('hideMinistry', true))
-        .then(count)
+        .then(() => count(true))
     } else {
       $w('#datasetMinistries')
         .setFilter(
@@ -130,13 +130,14 @@ function filterTypeDropdown() {
   })
 }
 
-function count() {
+function count(all) {
   $w('#datasetMinistries').onReady(() => {
     let total = $w('#datasetMinistries').getTotalCount()
 
     if (total > 1) {
       $w('#totalResultsText').text = `${total} results found`
-      $w('#totalResultsText, #resetBtn').show()
+      $w('#totalResultsText').show()
+      $w('#resetBtn')[all ? 'hide' : 'show']()
     } else if (total === 1) {
       $w('#totalResultsText').text = `${total} result found`
       $w('#totalResultsText, #resetBtn').show()
