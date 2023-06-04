@@ -16,6 +16,7 @@ import { fetch } from 'wix-fetch'
  * @returns {Promise<any[]>}
  */
 export async function getAllData(dataCollection) {
+  try {
   let results = await wixData
     .query('Ministries')
     .include('serviceOpportunities')
@@ -31,6 +32,10 @@ export async function getAllData(dataCollection) {
     }
   }
   return items
+  } catch (error) {
+    console.log(error)
+    return []
+  }
 }
 
 export async function getMultiReferencePropertyFromCollection(
