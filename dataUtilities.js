@@ -17,21 +17,17 @@ import { fetch } from 'wix-fetch'
  */
 export async function getAllData(dataCollection) {
   try {
-  let results = await wixData
-    .query('Ministries')
-    .include('serviceOpportunities')
-    .find()
-  let length = results.length
-  let items = length ? results.items : []
-
-  while (length > 0 && results.hasNext()) {
-    results = await results.next()
-    length = results.length
-    if (length) {
+    let results = await wixData
+      .query(dataCollection)
+      .limit(1000)
+      .include('serviceOpportunities')
+      .find()
+    let items = results?.items || []
+    while (results.hasNext()) {
+      results = await results.next()
       items = items.concat(results.items)
     }
-  }
-  return items
+    return items
   } catch (error) {
     console.log(error)
     return []
