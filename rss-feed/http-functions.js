@@ -1,84 +1,17 @@
 import wixData from "wix-data"
 import { Buffer } from "buffer"
-import { redirect } from "wix-router"
-import { mediaManager } from "wix-media-backend"
-import { ok, notFound, serverError, badRequest } from "wix-http-functions"
 import { getYear, getMonth, getDate, getHours, getMinutes } from "date-fns"
-
-export async function getEventsxml() {
-  const ics = require("ics")
-  let options = {
-    headers: {
-      "Content-Type": "text/document"
-    }
-  }
-
-  try {
-    const { items } = await wixData
-      .query("Events")
-      .ge("eventEndDate", new Date())
-      .ne("eventIsHidden", true)
-      .ascending("eventStartDate")
-      .find()
-
-    const formattedItems = items.map(
-      ({
-        eventTitle,
-        eventDescription,
-        eventStartDate,
-        eventLocationAddress,
-        eventRegistrationUrl
-      }) => ({
-        start: [
-          getYear(eventStartDate),
-          getMonth(eventStartDate) + 1,
-          getDate(eventStartDate),
-          getHours(eventStartDate),
-          getMinutes(eventStartDate)
-        ],
-        title: eventTitle,
-        description: eventDescription,
-        location: eventLocationAddress,
-        url: eventRegistrationUrl
-      })
-    )
-
-    const { error, value } = ics.createEvents(formattedItems)
-    if (error) return console.log(error)
-
-    options.body = items.length > 0 ? { value } : { error: "No events found" }
-
-    const buffer = Buffer.from(value)
-    const icsFile = await mediaManager.upload(
-      "iCalendar",
-      buffer,
-      "events.ics",
-      {
-        mediaOptions: {
-          mimeType: "text/calendar",
-          mediaType: "document"
-        },
-        metadataOptions: {
-          isPrivate: false,
-          isVisitorUpload: true
-        }
-      }
-    )
-    const wixUrl = icsFile?.fileUrl
-
-    if (!wixUrl) return console.log("No file URL returned")
-
-    const downloadUrl = await mediaManager.getFileUrl(wixUrl)
-    return redirect(downloadUrl, "200")
-  } catch (error) {
-    return console.log(error)
-  }
-}
+import {
+  response,
+  badRequest,
+  serverError,
+  WixHttpFunctionRequest
+} from "wix-http-functions"
 
 /**
  * @author Bruno Prado for Threed Software
  * @description Returns a list of events in ICS format string from the Events collection
- * @param {any} request
+ * @param {WixHttpFunctionRequest} request
  * @returns {Promise<any>}
  */
 export async function get_eventsxml(request) {
@@ -86,11 +19,11 @@ export async function get_eventsxml(request) {
   let options = {
     headers: {
       "Content-Type": "text/calendar",
-      "Content-Disposition": "attachment; filename=events.ics"
+      "Content-Disposition": `attachment; filename=nbevents${Date.now()}.ics`
     }
   }
 
-  const { query } = request
+  const { query } = request || {}
 
   if (query) {
     options.body = { error: "No query parameters allowed" }
@@ -105,59 +38,61 @@ export async function get_eventsxml(request) {
       .ascending("eventStartDate")
       .find()
 
-    const formattedItems = items.map(
-      ({
-        eventTitle,
-        eventDescription,
-        eventStartDate,
-        eventLocationAddress,
-        eventRegistrationUrl
-      }) => ({
-        start: [
-          getYear(eventStartDate),
-          getMonth(eventStartDate) + 1,
-          getDate(eventStartDate),
-          getHours(eventStartDate),
-          getMinutes(eventStartDate)
-        ],
-        title: eventTitle,
-        description: eventDescription,
-        location: eventLocationAddress,
-        url: eventRegistrationUrl
-      })
-    )
+    const formattedItems = formatDataForICS(items)
 
     const { error, value } = ics.createEvents(formattedItems)
     if (error) return serverError(error)
 
-    options.body = items.length > 0 ? { value } : { error: "No events found" }
-
     const buffer = Buffer.from(value)
-    const icsFile = await mediaManager.upload(
-      "iCalendar",
-      buffer,
-      "events.ics",
-      {
-        mediaOptions: {
-          mimeType: "text/calendar",
-          mediaType: "document"
-        },
-        metadataOptions: {
-          isPrivate: false,
-          isVisitorUpload: true
-        }
-      }
-    )
-    const wixUrl = icsFile?.fileUrl
 
-    if (!wixUrl) {
-      options.body = { error: "No file URL returned" }
-      return serverError(options)
-    }
+    options =
+      items.length > 0
+        ? { body: buffer, status: 200, ...options }
+        : { body: "No events found", status: 404, ...options }
 
-    const downloadUrl = await mediaManager.getFileUrl(wixUrl)
-    return redirect(downloadUrl, "302")
+    return response(options)
   } catch (error) {
     return serverError(error)
   }
+}
+
+/**
+ * This function formats the data from the Events collection to fit the ICS properties
+ *
+ * @author Bruno Prado for Threed Software
+ * @param {object} data - Data to be formatted
+ * @returns {object} - Formatted data to fit ICS properties
+ */
+function formatDataForICS(data) {
+  return data.map(
+    ({
+      eventTitle,
+      eventStartDate,
+      richDescription,
+      eventDescription,
+      eventLocationAddress,
+      ["link-events-eventTitle"]: eventRegistrationUrl
+    }) => ({
+      start: [
+        getYear(eventStartDate),
+        getMonth(eventStartDate) + 1,
+        getDate(eventStartDate),
+        getHours(eventStartDate),
+        getMinutes(eventStartDate)
+      ],
+      title: eventTitle,
+      url: `https://www.northboulevard.com${eventRegistrationUrl}`,
+      description: eventDescription,
+      htmlContent: formatHTMLforICS(
+        eventTitle,
+        eventDescription,
+        eventRegistrationUrl
+      ),
+      location: eventLocationAddress
+    })
+  )
+}
+
+function formatHTMLforICS(title, description, url) {
+  return `<!DOCTYPE html><html><head><title>${title}</title><link rel="stylesheet" type="text/css" href="styles.css"></head><body><h1>This is the Title</h1><p>${description}</p><a href="${`https://www.northboulevard.com${url}`}" style="text-decoration:none"><button style="background:rgba(133,197,76,.81);height:40px;border:none;border-radius:8px;box-shadow:rgba(0,0,0,.15) .17px .98px 25px 5px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;font-weight:700;font-size:16px;padding:1.5rem;display:flex;align-items:center;justify-content:center;color:#fff">Learn More</button></a></body></html>`
 }
