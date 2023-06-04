@@ -87,7 +87,6 @@ async function buildCampus() {
       .ne('hideMinistry', true)
       .limit(999)
       .distinct('ministryType')
-  // console.log({ resCampus });
 
     let res = await wixData
       .query('MinistryTypes')
