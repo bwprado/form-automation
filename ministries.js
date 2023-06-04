@@ -24,53 +24,7 @@ async function cacheServiceOpportunities() {
 
 $w.onReady(async function () {
   $w('#datasetMinistries').onReady(() => {
-    // console.log('dataset ready')
-
-    $w('#repeater1').onItemReady(async ($item, itemData, index) => {
-      // $w("#buttonOpportunities").label = `${} Opportunities`
-      let opportunities = serviceOpportunitiesById[itemData._id]
-      console.log('Total Opportunities: ' + opportunities)
-
-      //TODO, conect that value to the UI
-      $item('#buttonOpportunities').hide() //default is hide the button.
-      if (opportunities > 0) {
-        $item('#buttonOpportunities').label = `${
-          opportunities > 1
-            ? opportunities + ' opportunities'
-            : opportunities + ' opportunity'
-        }`
-        $item('#buttonOpportunities').show()
-      }
-
-      let image = itemData.ministryLogo
-      let campusBanner = itemData.ministryCampus
-      let theItem = itemData.ministryDescriptionText
-      let ministryUrl = itemData.ministryUrl
-
-      if (image) {
-        $item('#imageMinistry').src = image
-      } else {
-        $item('#imageMinistry').src =
-          'https://static.wixstatic.com/media/77e3c1_a3767b60e1624ea2a70c82f3c816a9f0~mv2.png'
-      }
-
-      if (campusBanner) {
-        $item('#bannerCampus').show()
-      } else {
-        $item('#bannerCampus').hide()
-      }
-
-      if (theItem) {
-        var shortDescription = theItem.substr(0, 82)
-        $item('#textMinistryDescription').text = shortDescription + '...'
-      }
-
-      if (ministryUrl) {
-        $item('#buttonMoreInfo').link = ministryUrl
-      } else {
-        $item('#buttonMoreInfo').link
-      }
-    })
+    $w('#repeater1').onItemReady(prepareRepeater)
   })
   // filters, reset button, repeater image
   buildCampus()
@@ -94,7 +48,37 @@ $w.onReady(async function () {
   })
 })
 
-// return [{label:"Provider", value:"_id of that campus"}]
+async function prepareRepeater($item, itemData) {
+  // $w("#buttonOpportunities").label = `${} Opportunities`
+  let opportunities = serviceOpportunitiesById[itemData?._id]
+
+  //TODO, conect that value to the UI
+  $item('#buttonOpportunities').label = `${opportunities} opportunit${
+    opportunities > 1 ? 'ies' : 'y'
+  }`
+
+  $item('#buttonOpportunities')[opportunities > 0 ? 'show' : 'hide']()
+
+  $item('#bannerCampus')[itemData?.ministryCampus ? 'show' : 'hide']()
+
+  $item('#buttonMoreInfo').link = itemData?.ministryUrl || ''
+
+  $item('#imageMinistry').src =
+    itemData?.ministryLogo ||
+    'https://static.wixstatic.com/media/77e3c1_a3767b60e1624ea2a70c82f3c816a9f0~mv2.png'
+
+  $item('#textMinistryDescription').text =
+    itemData?.ministryDescriptionText?.length > 82
+      ? itemData?.ministryDescriptionText.substr(0, 82) + '...'
+      : itemData?.ministryDescriptionText || ''
+}
+
+/**
+ * This function creates the options for the dropdownType filter
+ * It gets the data from the database and then creates the options
+ * @author {Chris Derrel | Bruno Prado} by Threed Software
+ * @returns {Promise<{ label: string, value: string }[]>}
+ */
 async function buildCampus() {
   // get non-duplicate provider id from the database
   let resCampus = await wixData
