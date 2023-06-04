@@ -21,9 +21,8 @@ async function cacheServiceOpportunities() {
     serviceOpportunitiesById[item._id] = item.serviceOpportunities.length
   })
 }
+
 $w.onReady(async function () {
-  // console.log('page ready')
-  await cacheServiceOpportunities()
   $w('#datasetMinistries').onReady(() => {
     // console.log('dataset ready')
 
@@ -73,7 +72,6 @@ $w.onReady(async function () {
       }
     })
   })
-
   // filters, reset button, repeater image
   buildCampus()
   filterTypeDropdown()
