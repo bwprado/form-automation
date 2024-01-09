@@ -1,6 +1,7 @@
 import wixData from 'wix-data'
 import { memory } from 'wix-storage'
 import { getAllData } from 'public/dataUtilities.js'
+import { filterState } from 'public/states/ministries'
 
 /**
  * @author Christopher Derrell
@@ -23,21 +24,17 @@ async function cacheServiceOpportunities() {
 }
 
 $w.onReady(async function () {
-  $w('#datasetMinistries').onReady(() => {
-    $w('#repeater1').onItemReady(prepareRepeater)
-  })
+  $w('#repeater1').onItemReady(prepareRepeater)
+  await $w('#datasetMinistries').onReadyAsync()
+  await $w('#datasetMinistries').setFilter(
+    wixData.filter().ne('hideMinistry', true)
+  )
+  newCount()
+  // count2()
+
   // filters, reset button, repeater image
   $w('#dropdownType').options = await buildCampus()
   filterTypeDropdown()
-
-  $w('#datasetMinistries')
-    .setFilter(wixData.filter().ne('hideMinistry', true))
-    .then(count2)
-  /*
-    $w("#repeater1").onItemReady(($item, itemData, index) => {
-        $item("#buttonContact").link = "mailto:" + itemData.lifeGroupContact + "?subject=LIFE group";
-      });
-      */
 
   $w('#resetBtn').onClick(() => {
     $w('#loading').show()
@@ -46,6 +43,10 @@ $w.onReady(async function () {
       .then(count2)
     $w('#dropdownType').selectedIndex = undefined
   })
+
+  $w('#iptSearch').onInput(searchMinistries)
+  $w('#btnClearSearch').onClick(handleClearSearch)
+  $w('#ddCampus').onChange(handleCampusChange)
 })
 
 async function prepareRepeater($item, itemData) {
@@ -175,4 +176,73 @@ function count2() {
     $w('#loading').hide()
     $w('#resetBtn').hide()
   })
+}
+
+/**
+ * This function counts the number of results found and displays it on the page
+ * It is called when the dataset is ready and when the search is complete
+ * It also hides the loading spinner when it is complete
+ * @author {Bruno Prado} by Threed Software
+ * @function newCount
+ * @returns {void}
+ */
+function newCount() {
+  let total = $w('#datasetMinistries')?.getTotalCount() || 0
+
+  $w('#txtSearchResults').text = `${total} result${
+    total > 1 || total === 0 ? 's' : ''
+  } found`
+  $w('#txtSearchResults').show()
+
+  $w('#searchLoading').hide()
+}
+
+let debounce = undefined
+/**
+ * This function searches the ministries database for the search term
+ * It searches the title, description, description text, and campus fields
+ * It uses an array of split search terms to search for each word in the search term
+ * It uses a debounce to prevent multiple calls to the database
+ * @author {Bruno Prado} by Threed Software
+ * @function searchMinistries
+ * @param {any} e
+ */
+async function searchMinistries(e) {
+  let campusFilter = $w('#ddCampus').value
+  filterState.setCampusFilter(campusFilter)
+
+  filterState.setSearch(e.target.value)
+
+  if (debounce) {
+    clearTimeout(debounce)
+  }
+  $w('#searchLoading').show()
+
+  if (!filterState.search) {
+    await $w('#datasetMinistries').setFilter(filterState.filter)
+    await $w('#datasetMinistries').onReadyAsync()
+    newCount()
+  }
+
+  $w('#btnClearSearch').show()
+  debounce = setTimeout(async () => {
+    await $w('#datasetMinistries').setFilter(filterState.filter)
+    await $w('#datasetMinistries').onReadyAsync()
+    newCount()
+  }, 500)
+}
+
+/**
+ * This function clears the search bar and resets the dataset filter
+ * It also hides the clear search button
+ * @author {Bruno Prado} by Threed Software
+ * @function handleClearSearch
+ */
+async function handleClearSearch() {
+  $w('#iptSearch').value = ''
+  await searchMinistries({ target: { value: '' } })
+}
+
+async function handleCampusChange(e) {
+  await searchMinistries({ target: { value: filterState.search } })
 }
