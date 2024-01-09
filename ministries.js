@@ -34,10 +34,10 @@ $w.onReady(async function () {
     .setFilter(wixData.filter().ne('hideMinistry', true))
     .then(count2)
   /*
-  $w("#repeater1").onItemReady(($item, itemData, index) => {
-      $item("#buttonContact").link = "mailto:" + itemData.lifeGroupContact + "?subject=LIFE group";
-    });
-    */
+    $w("#repeater1").onItemReady(($item, itemData, index) => {
+        $item("#buttonContact").link = "mailto:" + itemData.lifeGroupContact + "?subject=LIFE group";
+      });
+      */
 
   $w('#resetBtn').onClick(() => {
     $w('#loading').show()
@@ -51,6 +51,7 @@ $w.onReady(async function () {
 async function prepareRepeater($item, itemData) {
   // $w("#buttonOpportunities").label = `${} Opportunities`
   let opportunities = serviceOpportunitiesById[itemData?._id]
+  let redirectUrl = itemData.ministryUrl
 
   //TODO, conect that value to the UI
   $item('#buttonOpportunities').label = `${opportunities} opportunit${
@@ -61,7 +62,13 @@ async function prepareRepeater($item, itemData) {
 
   $item('#bannerCampus')[itemData?.ministryCampus ? 'show' : 'hide']()
 
-  $item('#buttonMoreInfo').link = itemData?.ministryUrl || ''
+  // redirect if ministryUrl exists
+  if (redirectUrl) {
+    $item('#buttonMoreInfo').link = redirectUrl
+    $item('#buttonMoreInfo').target = '_self'
+  } else {
+    $item('#buttonMoreInfo').link
+  }
 
   $item('#imageMinistry').src =
     itemData?.ministryLogo ||
