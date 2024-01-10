@@ -1,7 +1,8 @@
-import wixData from 'wix-data'
-import { memory } from 'wix-storage'
+import { debounce, filter } from 'lodash'
+import { autorun } from 'mobx'
 import { getAllData } from 'public/dataUtilities.js'
 import { filterState } from 'public/states/ministries'
+import wixData from 'wix-data'
 
 /**
  * @author Christopher Derrell
@@ -24,29 +25,35 @@ async function cacheServiceOpportunities() {
 }
 
 $w.onReady(async function () {
+  filterState.setInitialFilter(wixData.filter().ne('hideMinistry', true))
+
   $w('#repeater1').onItemReady(prepareRepeater)
+
   await $w('#datasetMinistries').onReadyAsync()
-  await $w('#datasetMinistries').setFilter(
-    wixData.filter().ne('hideMinistry', true)
-  )
+
+  await $w('#datasetMinistries').setFilter(filterState.getFilter())
   newCount()
   // count2()
 
   // filters, reset button, repeater image
-  $w('#dropdownType').options = await buildCampus()
-  filterTypeDropdown()
+  // $w('#dropdownType').options = await buildCampus()
+  // filterTypeDropdown()
 
-  $w('#resetBtn').onClick(() => {
-    $w('#loading').show()
-    $w('#datasetMinistries')
-      .setFilter(wixData.filter().ne('hideMinistry', true))
-      .then(count2)
-    $w('#dropdownType').selectedIndex = undefined
-  })
+  // $w('#resetBtn').onClick(() => {
+  //   $w('#loading').show()
+  //   $w('#datasetMinistries')
+  //     .setFilter(wixData.filter().ne('hideMinistry', true))
+  //     .then(count2)
+  //   $w('#dropdownType').selectedIndex = undefined
+  // })
 
-  $w('#iptSearch').onInput(searchMinistries)
+  $w('#iptSearch').onInput(debouncedSearchInput)
   $w('#btnClearSearch').onClick(handleClearSearch)
   $w('#ddCampus').onChange(handleCampusChange)
+
+  autorun(() => {
+    updateMinistries()
+  })
 })
 
 async function prepareRepeater($item, itemData) {
@@ -184,20 +191,17 @@ function count2() {
  * It also hides the loading spinner when it is complete
  * @author {Bruno Prado} by Threed Software
  * @function newCount
- * @returns {void}
  */
-function newCount() {
+async function newCount() {
+  await $w('#datasetMinistries').onReadyAsync()
   let total = $w('#datasetMinistries')?.getTotalCount() || 0
 
   $w('#txtSearchResults').text = `${total} result${
     total > 1 || total === 0 ? 's' : ''
   } found`
   $w('#txtSearchResults').show()
-
-  $w('#searchLoading').hide()
 }
 
-let debounce = undefined
 /**
  * This function searches the ministries database for the search term
  * It searches the title, description, description text, and campus fields
@@ -208,28 +212,11 @@ let debounce = undefined
  * @param {any} e
  */
 async function searchMinistries(e) {
-  let campusFilter = $w('#ddCampus').value
-  filterState.setCampusFilter(campusFilter)
+  const search = e?.target?.value || ''
+
+  $w('#btnClearSearch')[!search?.length ? 'hide' : 'show']()
 
   filterState.setSearch(e.target.value)
-
-  if (debounce) {
-    clearTimeout(debounce)
-  }
-  $w('#searchLoading').show()
-
-  if (!filterState.search) {
-    await $w('#datasetMinistries').setFilter(filterState.filter)
-    await $w('#datasetMinistries').onReadyAsync()
-    newCount()
-  }
-
-  $w('#btnClearSearch').show()
-  debounce = setTimeout(async () => {
-    await $w('#datasetMinistries').setFilter(filterState.filter)
-    await $w('#datasetMinistries').onReadyAsync()
-    newCount()
-  }, 500)
 }
 
 /**
@@ -243,6 +230,33 @@ async function handleClearSearch() {
   await searchMinistries({ target: { value: '' } })
 }
 
+/**
+ * This function updates the campus filter and then updates the dataset filter
+ * @author {Bruno Prado} by Threed Software
+ * @function handleCampusChange
+ * @param {$w.Event} e
+ */
 async function handleCampusChange(e) {
-  await searchMinistries({ target: { value: filterState.search } })
+  filterState.setCampusFilter(e.target.value)
 }
+
+/**
+ * This function is called to update the filtered dataset
+ * It is called when the search term changes or the campus filter changes
+ * @author {Bruno Prado} by Threed Software
+ * @function updateMinistries
+ */
+async function updateMinistries() {
+  $w('#searchLoading').show()
+
+  await $w('#datasetMinistries').setFilter(filterState.getFilter())
+  await newCount()
+
+  $w('#searchLoading').hide()
+}
+
+/**
+ * @function debouncedUpdateMinistries
+ * @description This function is a debounced version of updateMinistries
+ */
+const debouncedSearchInput = debounce((e) => searchMinistries(e), 500)
