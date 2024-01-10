@@ -5,12 +5,16 @@ import { observable } from 'mobx'
 export const filterState = observable({
   search: '',
   searchKeys: [],
-  campusFilter: '',
-  filter: wixData.filter().ne('hideMinistry', true),
+  campusFilter: null,
+  filter: null,
+  initialFilter: null,
 
+  setInitialFilter(filter) {
+    this.initialFilter = filter
+  },
   setCampusFilter(value) {
     if (value === 'all') {
-      this.campusFilter = ''
+      this.campusFilter = null
       return
     }
     this.campusFilter = wixData.filter().hasSome('ministryCampus', value)
@@ -20,9 +24,6 @@ export const filterState = observable({
 
     if (!this.search) {
       this.searchKeys = []
-      this.filter = this.campusFilter
-        ? wixData.filter().ne('hideMinistry', true).and(this.campusFilter)
-        : wixData.filter().ne('hideMinistry', true)
       return
     }
 
@@ -33,22 +34,24 @@ export const filterState = observable({
         .split(' ')
         .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
     ]
-    this.setSearchFilter()
   },
-  setSearchFilter() {
-    let filter = []
+  getFilter() {
+    let searchFilter = []
 
-    this.searchKeys.forEach((key) => {
-      filter.push(wixData.filter().contains('ministryTitle', key))
-      filter.push(wixData.filter().contains('ministryDescription', key))
-    })
+    if (this.searchKeys.length === 0) {
+      searchFilter = [this.initialFilter]
+    } else {
+      this.searchKeys.forEach((key) => {
+        searchFilter.push(wixData.filter().contains('ministryTitle', key))
+        searchFilter.push(wixData.filter().contains('ministryDescription', key))
+      })
+    }
 
-    this.filter = filter.reduce(
-      (acc, cur, i) => (i === 0 ? acc.and(cur) : acc.or(cur)),
-      this.filter
-    )
-    this.filter = this.campusFilter
-      ? this.filter.and(this.campusFilter)
-      : this.filter
+    let keysFilter =
+      searchFilter.length > 1
+        ? this.initialFilter.and(searchFilter.reduce((a, b) => a.or(b)))
+        : searchFilter[0]
+
+    return this.campusFilter ? this.campusFilter.and(keysFilter) : keysFilter
   }
 })
