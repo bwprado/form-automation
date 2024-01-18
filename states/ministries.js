@@ -2,6 +2,14 @@ import wixData from 'wix-data'
 
 import { observable } from 'mobx'
 
+const FILTER_VALUES = {
+  all: 'all',
+  east: '9cf1b820-8a76-436d-b61c-c26346e98da5',
+  west: 'ede394da-93a1-4b61-b59f-c81453e557d1',
+  online: '0f966792-1688-49a0-8fd0-697c9d342375',
+  allCampuses: '4a4b706f-3a88-43a1-8f0a-406e108c4d81'
+}
+
 export const filterState = observable({
   search: '',
   searchKeys: [],
@@ -52,6 +60,10 @@ export const filterState = observable({
         ? this.initialFilter.and(searchFilter.reduce((a, b) => a.or(b)))
         : searchFilter[0]
 
-    return this.campusFilter ? this.campusFilter.and(keysFilter) : keysFilter
+    return this.campusFilter
+      ? this.campusFilter
+          .and(keysFilter)
+          .or(wixData.filter().hasSome('ministryCampus', FILTER_VALUES.allCampuses))
+      : keysFilter
   }
 })
