@@ -1,4 +1,4 @@
-import { debounce, filter } from 'lodash'
+import { debounce } from 'lodash'
 import { autorun } from 'mobx'
 import { getAllData } from 'public/dataUtilities.js'
 import { filterState } from 'public/states/ministries'
