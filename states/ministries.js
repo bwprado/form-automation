@@ -25,7 +25,7 @@ export const filterState = observable({
       this.campusFilter = null
       return
     }
-    this.campusFilter = wixData.filter().hasSome('ministryCampus', value)
+    this.campusFilter = value
   },
   setSearch(value) {
     this.search = value
@@ -44,26 +44,33 @@ export const filterState = observable({
     ]
   },
   getFilter() {
-    let searchFilter = []
+    let filter = this.initialFilter
 
-    if (this.searchKeys.length === 0) {
-      searchFilter = [this.initialFilter]
-    } else {
-      this.searchKeys.forEach((key) => {
-        searchFilter.push(wixData.filter().contains('ministryTitle', key))
-        searchFilter.push(wixData.filter().contains('ministryDescription', key))
-      })
+    if (this.searchKeys?.length) {
+      filter = filter.and(
+        wixData
+          .filter()
+          .contains('ministryTitle', this.searchKeys[0])
+          .or(
+            wixData.filter().contains('ministryDescription', this.searchKeys[0])
+          )
+      )
     }
 
-    let keysFilter =
-      searchFilter.length > 1
-        ? this.initialFilter.and(searchFilter.reduce((a, b) => a.or(b)))
-        : searchFilter[0]
+    filter = this.campusFilter
+      ? filter.and(
+          wixData
+            .filter()
+            .hasSome(
+              'ministryCampus',
+              [
+                this.campusFilter,
+                this.searchKeys.length ? FILTER_VALUES.allCampuses : null
+              ].filter(Boolean)
+            )
+        )
+      : filter
 
-    return this.campusFilter
-      ? this.campusFilter
-          .and(keysFilter)
-          .or(wixData.filter().hasSome('ministryCampus', FILTER_VALUES.allCampuses))
-      : keysFilter
+    return filter
   }
 })
