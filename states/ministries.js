@@ -52,7 +52,9 @@ export const filterState = observable({
           .filter()
           .contains('ministryTitle', this.searchKeys[0])
           .or(
-            wixData.filter().contains('ministryDescription', this.searchKeys[0])
+            wixData
+              .filter()
+              .contains('ministryDescriptionText', this.searchKeys[0])
           )
       )
     }
