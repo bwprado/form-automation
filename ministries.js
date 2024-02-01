@@ -1,6 +1,5 @@
 import { debounce } from 'lodash'
 import { autorun } from 'mobx'
-import { getAllData } from 'public/dataUtilities.js'
 import { filterState } from 'public/states/ministries'
 import wixData from 'wix-data'
 
@@ -13,17 +12,6 @@ import wixData from 'wix-data'
  */
 let serviceOpportunitiesById = {}
 
-async function cacheServiceOpportunities() {
-  const items = await getAllData('Ministries')
-
-  //console.log(items);
-
-  //Store just the item IDs and service opportunities in cache.
-  items.forEach((item) => {
-    serviceOpportunitiesById[item._id] = item.serviceOpportunities.length
-  })
-}
-
 $w.onReady(async function () {
   filterState.setInitialFilter(wixData.filter().ne('hideMinistry', true))
 
@@ -33,19 +21,6 @@ $w.onReady(async function () {
 
   await $w('#datasetMinistries').setFilter(filterState.getFilter())
   newCount()
-  // count2()
-
-  // filters, reset button, repeater image
-  // $w('#dropdownType').options = await buildCampus()
-  // filterTypeDropdown()
-
-  // $w('#resetBtn').onClick(() => {
-  //   $w('#loading').show()
-  //   $w('#datasetMinistries')
-  //     .setFilter(wixData.filter().ne('hideMinistry', true))
-  //     .then(count2)
-  //   $w('#dropdownType').selectedIndex = undefined
-  // })
 
   $w('#iptSearch').onInput(debouncedSearchInput)
   $w('#btnClearSearch').onClick(handleClearSearch)
@@ -57,7 +32,6 @@ $w.onReady(async function () {
 })
 
 async function prepareRepeater($item, itemData) {
-  // $w("#buttonOpportunities").label = `${} Opportunities`
   let opportunities = serviceOpportunitiesById[itemData?._id]
   let redirectUrl = itemData.ministryUrl
 
@@ -86,103 +60,6 @@ async function prepareRepeater($item, itemData) {
     itemData?.ministryDescriptionText?.length > 82
       ? itemData?.ministryDescriptionText.substr(0, 82) + '...'
       : itemData?.ministryDescriptionText || ''
-}
-
-/**
- * This function creates the options for the dropdownType filter
- * It gets the data from the database and then creates the options
- * @author {Chris Derrel | Bruno Prado} by Threed Software
- * @returns {Promise<{ label: string, value: string }[]>}
- */
-async function buildCampus() {
-  // get non-duplicate provider id from the database
-  try {
-    let resCampus = await wixData
-      .query('Ministries')
-      .ne('hideMinistry', true)
-      .limit(999)
-      .distinct('ministryType')
-
-    let res = await wixData
-      .query('MinistryTypes')
-      .hasSome('_id', resCampus?.items || [])
-      .limit(999)
-      .ascending('title')
-      .find()
-
-    return [
-      {
-        label: 'All',
-        value: 'all'
-      },
-      ...res.items.map((el) => ({ label: el.title, value: el._id }))
-    ]
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-function filterTypeDropdown() {
-  $w('#dropdownType').onChange(() => {
-    $w('#loading').show()
-
-    // console.log($w("#dropdownType").value)
-
-    if ($w('#dropdownType').value === 'all') {
-      $w('#datasetMinistries')
-        .setFilter(wixData.filter().ne('hideMinistry', true))
-        .then(() => count(true))
-    } else {
-      $w('#datasetMinistries')
-        .setFilter(
-          wixData
-            .filter()
-            .hasSome('ministryType', $w('#dropdownType').value)
-            .ne('hideMinistry', true)
-        )
-        .then(count)
-    }
-  })
-}
-
-function count(all) {
-  $w('#datasetMinistries').onReady(() => {
-    let total = $w('#datasetMinistries').getTotalCount()
-
-    if (total > 1) {
-      $w('#totalResultsText').text = `${total} results found`
-      $w('#totalResultsText').show()
-      $w('#resetBtn')[all ? 'hide' : 'show']()
-    } else if (total === 1) {
-      $w('#totalResultsText').text = `${total} result found`
-      $w('#totalResultsText, #resetBtn').show()
-    } else {
-      $w('#totalResultsText').text = `${total} results found`
-      $w('#totalResultsText, #resetBtn').show()
-    }
-
-    $w('#loading').hide()
-  })
-}
-
-function count2() {
-  $w('#datasetMinistries').onReady(() => {
-    let total = $w('#datasetMinistries').getTotalCount()
-
-    if (total > 1) {
-      $w('#totalResultsText').text = `${total} results found`
-      $w('#totalResultsText').show()
-    } else if (total === 1) {
-      $w('#totalResultsText').text = `${total} result found`
-      $w('#totalResultsText').show()
-    } else {
-      $w('#totalResultsText').text = `${total} results found`
-      $w('#totalResultsText').show()
-    }
-
-    $w('#loading').hide()
-    $w('#resetBtn').hide()
-  })
 }
 
 /**
