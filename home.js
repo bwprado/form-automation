@@ -5,9 +5,22 @@ import wixAnimations from 'wix-animations'
 import wixSite from 'wix-site'
 import Countdown from 'public/countdown.js'
 
+import { getAllEvents } from 'backend/database/events.web'
+//@ts-ignore
+import { format, parseISO } from 'date-fns'
+
 let timelineA = wixAnimations.timeline()
 
+/**
+ * @typedef {import('public/types').Event} Event
+ */
+
 $w.onReady(async function () {
+  const allEvents = await getAllEvents({ end: new Date() })
+  $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
+  $w('#repeaterEvents').data = allEvents
+  $w('#sectionUpcomingEvents')[allEvents.length ? 'expand' : 'collapse']()
+
   $w('#buttonWaysToGive').onClick(() => wixLocation.to('/ways-to-give'))
 
   const { countdownEndDate: targetDate, duration } =
@@ -114,33 +127,6 @@ $w.onReady(async function () {
   //filter Event slider
   var today = new Date()
 
-  $w('#datasetEvents')
-    .setFilter(
-      wixData
-        .filter()
-        .ge('eventEndDate', today)
-        .eq('eventOnHomepage', true)
-        .ne('ministrySpecificEvent', true)
-        .ne('eventIsHidden', true)
-    )
-    .then(() => {
-      errorTextResult()
-    })
-
-  // No Event Repeater Results
-  function errorTextResult() {
-    $w('#datasetEvents').onReady(() => {
-      let count = $w('#datasetEvents').getTotalCount()
-
-      if (count > 0) {
-        $w('#sectionUpcomingEvents').expand()
-      }
-      if (count === 0) {
-        $w('#sectionUpcomingEvents').collapse()
-      }
-    })
-  }
-
   // redirect Featured Event if redirect url exists
   // this code does not work
   $w('#datasetFeaturedEvent').onReady(() => {
@@ -150,28 +136,6 @@ $w.onReady(async function () {
     item.redirectUrl
       ? ($w('#buttonFeaturedEvent').link = featuredRedirectUrl)
       : $w('#buttonFeaturedEvent').link
-  })
-
-  // redirect Event if redirect url exists
-  $w('#repeaterEvents').onItemReady(async ($item, itemData, index) => {
-    let redirectUrl = itemData.redirectUrl
-    let isSpecial = itemData.isSpecial
-
-    // redirect from dynamic event page to another page
-    if (redirectUrl) {
-      $item('#buttonEvent').link = redirectUrl
-      $item('#buttonEvent').target = '_self'
-    } else {
-      $item('#buttonEvent').link
-    }
-
-    //collapse date&time&location if Special
-
-    if (isSpecial) {
-      $item('#textDate').hide()
-    } else {
-      $item('#textDate').show()
-    }
   })
 
   //Help section animation
@@ -195,4 +159,19 @@ $w.onReady(async function () {
 // Countdown container links to
 export function countdownLive_click(event) {
   wixLocation.to('/online')
+}
+
+/**
+ * @function prepareRepeaterEvents
+ * @param {any} $item
+ * @param {Event} itemData
+ */
+async function prepareRepeaterEvents($item, itemData) {
+  $item('#buttonEvent').link = itemData['link-events-eventTitle']
+  $item('#imageEvent').src = itemData.eventImageLandscape
+  $item('#textEventName').text = itemData.eventTitle
+  $item('#textDate').text = itemData?.eventEndDate
+    ? format(itemData.eventEndDate, 'MMM d, yyyy')
+    : '-'
+  $item('#textDate')[itemData.isSpecial ? 'hide' : 'show']()
 }
