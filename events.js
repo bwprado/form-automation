@@ -71,6 +71,14 @@ $w.onReady(() => {
             $item("#buttonMoreInfo").link;
         }
 
+        // redirect from dynamic event page to another page
+        if (redirectUrl) {
+            $item("#buttonEventInfo").link = redirectUrl;
+            $item("#buttonEventInfo").target = "_self";
+        } else {
+            $item("#buttonEventInfo").link;
+        }
+
     });
     
 
