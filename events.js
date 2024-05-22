@@ -1,31 +1,31 @@
 // For full API documentation, including code examples, visit https://wix.to/94BuAAs
-import wixData from 'wix-data';
-import { getMultiReferencePropertyFromCollection } from 'public/dataUtilities.js';
+import wixData from 'wix-data'
+import { getMultiReferencePropertyFromCollection } from 'public/dataUtilities.js'
 
 $w.onReady(() => {
+  //filter past Event Dates
+  var today = new Date()
+  $w('#datasetEvents')
+    .setFilter(
+      wixData
+        .filter()
+        .ge('eventEndDate', today)
+        .ne('ministrySpecificEvent', true)
+        //.eq('eventIsFeatured', true)
+        .ne('eventIsHidden', true)
+      //.ne('isSpecial', true)
+    )
+    .then(() => {
+      // No Events Message
+      // errorTextResult();
+      console.log('Dataset Filtered')
+    })
 
-    //filter past Event Dates
-    var today = new Date();
-    $w('#datasetEvents').setFilter(wixData.filter()
-            .ge('eventEndDate', today)
-            .ne('ministrySpecificEvent', true)
-            //.eq('eventIsFeatured', true)
-            .ne('eventIsHidden', true)
-            //.ne('isSpecial', true)
-        )
-        .then(() => {
-            // No Events Message
-            // errorTextResult();
-            console.log("Dataset Filtered");
-        })
- 
-
-
-    //$w("#datasetEvents").onReady(() => {
-    $w("#repeaterEvents").onItemReady(async ($item, itemData, index) => {
-        let redirectUrl = itemData.redirectUrl;
-        let isSpecial = itemData.isSpecial;
-        /*
+  //$w("#datasetEvents").onReady(() => {
+  $w('#repeaterEvents').onItemReady(async ($item, itemData, index) => {
+    let redirectUrl = itemData.redirectUrl
+    let isSpecial = itemData.isSpecial
+    /*
         // expand button if register url exists
             if (itemData.eventRegistrationUrl) {
                 $item("#buttonRegister").expand();
@@ -34,71 +34,83 @@ $w.onReady(() => {
             }
         */
 
-        let campuses = itemData ? await getMultiReferencePropertyFromCollection("eventAssociatedCampuses", "Events", itemData._id) : [];
-        console.log(`campuses [${campuses.length}] event: [${itemData.eventTitle}] color ${JSON.stringify($item('#tagCampus').style)}`);
+    let campuses = itemData
+      ? await getMultiReferencePropertyFromCollection(
+          'eventAssociatedCampuses',
+          'Events',
+          itemData._id
+        )
+      : []
+    console.log(
+      `campuses [${campuses.length}] event: [${
+        itemData.eventTitle
+      }] color ${JSON.stringify($item('#tagCampus').style)}`
+    )
 
-        debugger;
+    debugger
 
-        if (campuses.length === 1) {
-            $item('#tagCampus').label = campuses[0].campusFullTitle;
-            $item('#tagCampus').expand().catch(error => console.log(`Show Error: ${error.message}`));
-        } else if (campuses.length > 1) {
-            $item('#tagCampus').label = "All Campuses";
-            $item('#tagCampus').expand().catch(error => console.log(`Show Error: ${error.message}`));
-        } else {
-            $item('#tagCampus').label = "";
-            $item('#tagCampus').collapse().catch(error => console.log(`Hide Error: ${error.message}`));
-        }
+    if (campuses.length === 1) {
+      $item('#tagCampus').label = campuses[0].campusFullTitle
+      $item('#tagCampus')
+        .expand()
+        .catch((error) => console.log(`Show Error: ${error.message}`))
+    } else if (campuses.length > 1) {
+      $item('#tagCampus').label = 'All Campuses'
+      $item('#tagCampus')
+        .expand()
+        .catch((error) => console.log(`Show Error: ${error.message}`))
+    } else {
+      $item('#tagCampus').label = ''
+      $item('#tagCampus')
+        .collapse()
+        .catch((error) => console.log(`Hide Error: ${error.message}`))
+    }
 
-        //collapse date&time&location if Special
-        if (isSpecial) {
-            $item("#textTime").hide()
-            $item("#textDate").hide()
-            $item("#textLocation").hide()
-        } else {
-            $item("#textTime").show()
-            $item("#textDate").show()
-            $item("#textLocation").show()
-        }
+    //collapse date&time&location if Special
+    if (isSpecial) {
+      $item('#textTime').hide()
+      $item('#textDate').hide()
+      $item('#textLocation').hide()
+    } else {
+      $item('#textTime').show()
+      $item('#textDate').show()
+      $item('#textLocation').show()
+    }
 
+    // redirect from dynamic event page to another page
+    if (redirectUrl) {
+      $item('#buttonMoreInfo').link = redirectUrl
+      $item('#buttonMoreInfo').target = '_self'
+    } else {
+      $item('#buttonMoreInfo').link
+    }
 
+    // redirect from dynamic event page to another page
+    if (redirectUrl) {
+      $item('#buttonEventInfo').link = redirectUrl
+      $item('#buttonEventInfo').target = '_self'
+    } else {
+      $item('#buttonEventInfo').link
+    }
+  })
 
-        // redirect from dynamic event page to another page
-        if (redirectUrl) {
-            $item("#buttonMoreInfo").link = redirectUrl;
-            $item("#buttonMoreInfo").target = "_self";
-        } else {
-            $item("#buttonMoreInfo").link;
-        }
+  //});
 
-        // redirect from dynamic event page to another page
-        if (redirectUrl) {
-            $item("#buttonEventInfo").link = redirectUrl;
-            $item("#buttonEventInfo").target = "_self";
-        } else {
-            $item("#buttonEventInfo").link;
-        }
+  // No Repeater Results
+  // function errorTextResult() {
+  //     $w("#datasetEvents").onReady(() => {
+  //         let count = $w("#datasetEvents").getTotalCount();
 
-    });
-    
+  //         if (count > 0) {
+  //             $w('#noResText').hide();
 
-    //});
-
-    // No Repeater Results
-    // function errorTextResult() {
-    //     $w("#datasetEvents").onReady(() => {
-    //         let count = $w("#datasetEvents").getTotalCount();
-
-    //         if (count > 0) {
-    //             $w('#noResText').hide();
-
-    //         }
-    //         if (count === 0) {
-    //             $w('#noResText').show();
-    //         }
-    //     });
-    // }
-});
+  //         }
+  //         if (count === 0) {
+  //             $w('#noResText').show();
+  //         }
+  //     });
+  // }
+})
 
 // export async function repeater1_itemReady($item, itemData, index) {
 
