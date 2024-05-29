@@ -1,76 +1,172 @@
 import wixData from 'wix-data'
 
 import { Permissions, webMethod } from 'wix-web-module'
+import { uniqBy } from 'lodash'
+import { format, parseISO } from 'date-fns'
 
 /**
- * @typedef {Object} Event
- * @property {string} _id
- * @property {'hidden' | 'visible'} status
- * @property {string} eventTitle
- * @property {string} eventDescription
- * @property {string} eventStartDate
- * @property {string} eventEndDate
- * @property {string} eventImageLandscape
- * @property {string} eventLocationName
- * @property {string} redirectUrl
- * @property {string[]} serviceOpportunities
- * @property {string[]} eventMinistries
- * @property {string} eventAssociatedCampuses
- * @property {string} eventVideo
- * @property {string} richDescription
- * @property {string} eventRegistrationUrl
- * @property {string} buttonALabel
- * @property {boolean} ministrySpecificEvent
- * @property {boolean} isSpecial
- * @property {string} link-events-eventTitle
+ * @typedef {import('public/types/events').Event} Event
+ * @typedef {import('public/types/events').Campuses} Campuses
+ * @typedef {import('public/types/events').SpecialEvent} SpecialEvent
+ * @typedef {import('public/types/events').ParsedSpecialEvent} ParsedSpecialEvent
+ * @typedef {import('public/types/events').SpecialEventSchedule} SpecialEventSchedule
  */
 
 /**
  * @function getEventsFromToday
  * @description Get events from today
- * @params {Object} options - options
- * @params {Date | null} options.start - start date
- * @params {Date | null} options.end - end date
- * @returns {Promise<Array<Event>>}
+ * @param {Object} options - options
+ * @param {Date} options.start - start date
+ * @param {Date} options.end - end date
+ * @param {boolean} options.onHomePage - on home page
+ * @param {boolean} options.isHidden - is hidden
+ * @param {boolean} options.ministrySpecific - ministry specific
+ * @param {Campuses[]} options.campuses - campuses
+ * @returns {Promise<Event[] | []>}
  */
-async function getAllEventsFunction({ start = null, end = null }) {
+async function getEventsFunction({
+  start = null,
+  end = null,
+  onHomePage = false,
+  isHidden = false,
+  ministrySpecific = false,
+  campuses = []
+}) {
   try {
     let eventsQuery = await wixData
       .query('Events')
       .limit(20)
-      .eq('eventOnHomepage', true)
-      .ne('ministrySpecificEvent', true)
-      .ne('eventIsHidden', true)
       .ascending('eventEndDate')
 
-    end && eventsQuery.ge('eventEndDate', end)
+    eventsQuery = isHidden
+      ? eventsQuery.eq('eventIsHidden', isHidden)
+      : eventsQuery
+    eventsQuery = ministrySpecific
+      ? eventsQuery.eq('ministrySpecificEvent', ministrySpecific)
+      : eventsQuery
+    eventsQuery =
+      campuses.length > 0
+        ? eventsQuery.hasSome('eventAssociatedCampuses', campuses)
+        : eventsQuery
+    eventsQuery = onHomePage
+      ? eventsQuery.eq('eventOnHomepage', onHomePage)
+      : eventsQuery
+    eventsQuery = start ? eventsQuery.ge('eventStartDate', start) : eventsQuery
+    eventsQuery = end ? eventsQuery.ge('eventEndDate', end) : eventsQuery
 
     const { items: events } = await eventsQuery.find()
-
-    let specialEventsQuery = await wixData
-      .query('SpecialEvent')
-      .limit(20)
-      .ne('hideEvents', true)
-
-    const { items: specialEvents } = await specialEventsQuery.find()
-
-    return [...parseSpecialEvent(specialEvents), ...events]
+    return events
   } catch (error) {
     console.error(error)
     return []
   }
 }
 
-export const getAllEvents = webMethod(Permissions.Anyone, getAllEventsFunction)
+export const getEvents = webMethod(Permissions.Anyone, getEventsFunction)
 
-function parseSpecialEvent(specialEvents) {
+/**
+ *
+ * @param {SpecialEvent[]} specialEvents
+ * @returns {Promise<ParsedSpecialEvent[]>}
+ */
+async function parseSpecialEventFunction(specialEvents) {
   return specialEvents.map((specialEvent) => ({
     _id: specialEvent._id,
     eventTitle: specialEvent.title,
-    eventDescription: specialEvent.eventDescriptionTitle,
+    eventDescription: specialEvent.eventDescription,
     eventImageLandscape: specialEvent.scheduleBackgroundImage,
-    eventStartDate: specialEvent?.startDate || null,
-    eventEndDate: specialEvent?.endDate || null,
-    ['link-events-eventTitle']: specialEvent['link-special-event-title']
+    date: specialEvent?.date || null,
+    ['link-events-eventTitle']: specialEvent['link-special-event-title'],
+    isSpecial: true
+  }))
+}
+
+export const parseSpecialEvent = webMethod(
+  Permissions.Anyone,
+  parseSpecialEventFunction
+)
+
+/**
+ *
+ * @param {Object} options
+ * @param {Date} options.date
+ * @returns {Promise<SpecialEvent[]>}
+ */
+async function getSpecialEventsFunction({ date }) {
+  try {
+    let specialEventsQuery = await wixData
+      .query('SpecialEvent')
+      .ge('date', date)
+      .limit(20)
+
+    const { items: specialEvents } = await specialEventsQuery.find()
+    console.log(specialEvents)
+    return specialEvents
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}
+
+export const getSpecialEvents = webMethod(
+  Permissions.Anyone,
+  getSpecialEventsFunction
+)
+
+/**
+ * @function getSpecialEventScheduleFunction
+ * @description Get special event schedule
+ * @param {Object} params
+ * @param {Date} [params.date]
+ * @returns {Promise<ParsedSpecialEvent[]>}
+ */
+async function getSpecialEventScheduleFunction({ date }) {
+  try {
+    let specialEventScheduleQuery = await wixData
+      .query('SpecialEventSchedules')
+      .include('referencedSpecialEvent')
+      .limit(20)
+
+    specialEventScheduleQuery = date
+      ? specialEventScheduleQuery.ge('date', date)
+      : specialEventScheduleQuery
+
+    const { items: specialEventSchedule } =
+      await specialEventScheduleQuery.find()
+
+    const uniqueSpecialEvents = uniqBy(
+      specialEventSchedule,
+      'referencedSpecialEvent._id'
+    )
+
+    const parsedSpecialEvents = parseSpecialEventSchedule(uniqueSpecialEvents)
+
+    return parsedSpecialEvents
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}
+
+export const getSpecialEventSchedule = webMethod(
+  Permissions.Anyone,
+  getSpecialEventScheduleFunction
+)
+
+/**
+ * @function parseSpecialEventSchedule
+ * @param {SpecialEventSchedule[]} specialEventSchedules
+ * @returns {ParsedSpecialEvent[]}
+ */
+function parseSpecialEventSchedule(specialEventSchedules) {
+  return specialEventSchedules.map((special) => ({
+    _id: special._id,
+    eventTitle: special.referencedSpecialEvent.title,
+    eventDescription: special.scheduleDescription,
+    eventImageLandscape: special?.referencedSpecialEvent?.image,
+    date: format(parseISO(special?.date), 'MMM, dd yyyy') || null,
+    ['link-events-eventTitle']:
+      special.referencedSpecialEvent['link-special-event-title'],
+    isSpecial: true
   }))
 }
