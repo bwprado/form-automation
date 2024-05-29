@@ -1,22 +1,28 @@
-import wixWindow from 'wix-window'
-import wixLocation from 'wix-location'
-import wixData from 'wix-data'
-import wixAnimations from 'wix-animations'
-import wixSite from 'wix-site'
 import Countdown from 'public/countdown.js'
+import wixAnimations from 'wix-animations'
+import wixData from 'wix-data'
+import wixLocation from 'wix-location'
+import wixSite from 'wix-site'
+import wixWindow from 'wix-window'
 
-import { getAllEvents } from 'backend/database/events.web'
-//@ts-ignore
-import { format, parseISO } from 'date-fns'
+import {
+  getEvents,
+  getSpecialEventSchedule,
+} from 'backend/database/events.web'
+import { format } from 'date-fns'
 
 let timelineA = wixAnimations.timeline()
-
 /**
- * @typedef {import('public/types').Event} Event
+ * @typedef {import('public/types/events').Event} Event
+ * @typedef {import('public/types/events').SpecialEvent} SpecialEvent
  */
 
 $w.onReady(async function () {
-  const allEvents = await getAllEvents({ end: new Date() })
+  const events = await getEvents({ end: new Date(), onHomePage: true })
+  const specialEvents = await getSpecialEventSchedule({ date: format(new Date(), "yyyy-MM-dd") })
+  console.log({ events, specialEvents })
+  const allEvents = [...events, ...specialEvents]
+
   $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
   $w('#repeaterEvents').data = allEvents
   $w('#sectionUpcomingEvents')[allEvents.length ? 'expand' : 'collapse']()
@@ -173,5 +179,5 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#textDate').text = itemData?.eventEndDate
     ? format(itemData.eventEndDate, 'MMM d, yyyy')
     : '-'
-  $item('#textDate')[itemData.isSpecial ? 'hide' : 'show']()
+  $item('#textDate')[itemData?.isSpecial ? 'hide' : 'show']()
 }
