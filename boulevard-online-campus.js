@@ -3,7 +3,15 @@ import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
 import wixData from 'wix-data'
 
-$w.onReady(function () {
+import { Campuses } from 'public/types/campuses'
+import { getAllEvents } from 'backend/database/events.web'
+
+$w.onReady(async function () {
+  const allEvents = await getAllEvents({
+    start: new Date(),
+    campuses: [Campuses.Online]
+  })
+  console.log(allEvents)
   // Prefetch
   let response = wixSite.prefetchPageResources({
     pages: ['/boulevard-kids-east', '/campus-west-murfreesboro', '/new-home']
@@ -39,9 +47,7 @@ $w.onReady(function () {
       wixData
         .filter()
         .ge('eventStartDate', today)
-        .hasSome('eventAssociatedCampuses', [
-          '0f966792-1688-49a0-8fd0-697c9d342375'
-        ])
+        .hasSome('eventAssociatedCampuses', [Campuses.Online])
         .ne('eventIsHidden', true)
         .ne('ministrySpecificEvent', true)
     )
