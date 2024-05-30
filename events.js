@@ -1,6 +1,28 @@
 import { getMultiReferencePropertyFromCollection } from 'public/dataUtilities.js'
-import { getSpecialEvents } from 'backend/database/events.web'
 import { format } from 'date-fns'
+import { observable, autorun } from 'mobx'
+import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
+
+const eventsState = observable({
+  allEvents: [],
+  eventsQuery: {},
+  specialEventsQuery: {},
+  get sortedAllEvents() {
+    if (!this.allEvents.length) return []
+    return this.allEvents.toSorted(
+      (a, b) => a.eventStartDate - b.eventStartDate
+    )
+  },
+  setAllEvents(events) {
+    this.allEvents = events
+  },
+  setEventsQuery(query) {
+    this.eventsQuery = query
+  },
+  setSpecialEventsQuery(query) {
+    this.specialEventsQuery = query
+  }
+})
 
 /**
  * @typedef {import('public/types/events').Event} Event
@@ -20,33 +42,39 @@ const prepareRepeaterSpecial = async ($item, itemData) => {
 }
 
 /**
- *
+ * @function prepareRepeaterEvents
+ * @description Prepare the events repeater
  * @param {any} $item
- * @param {Event} itemData
+ * @param {Partial<Event>} itemData
  */
 const prepareRepeaterEvents = async ($item, itemData) => {
   $item('#textEventTitle').text = itemData.eventTitle
   $item('#textDate').text = format(itemData.eventStartDate, 'MMM d, yyyy')
-  $item('#textTime').text = format(itemData.eventStartDate, 'h:mm a')
+  $item('#textTime').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'h:mm a')
+    : ''
   $item('#textLocation').text = itemData.eventLocationName
-  $item('#buttonRegister').link = itemData.eventRegistrationUrl
+  $item('#buttonRegister').link = itemData?.eventRegistrationUrl || ''
   $item('#buttonMoreInfo').link = itemData['link-events-eventTitle']
+  $item('#buttonEventInfo').link = itemData['link-events-eventTitle']
   $item('#imageEvent').src = itemData.eventImageLandscape
 
-  let campuses = itemData
+  $item('#buttonRegister')[
+    itemData?.eventRegistrationUrl ? 'expand' : 'collapse'
+  ]()
+
+  let campuses = itemData?._id
     ? await getMultiReferencePropertyFromCollection(
-        'eventAssociatedCampuses',
-        'Events',
+        itemData?.isSpecial ? 'campuses' : 'eventAssociatedCampuses',
+        itemData?.isSpecial ? 'SpecialEvent' : 'Events',
         itemData._id
       )
     : []
-  console.log(
-    `campuses [${campuses.length}] event: [${
-      itemData.eventTitle
-    }] color ${JSON.stringify($item('#tagCampus').style)}`
-  )
-
-  debugger
+  // console.log(
+  //   `campuses [${campuses.length}] event: [${
+  //     itemData.eventTitle
+  //   }] color ${JSON.stringify($item('#tagCampus').style)}`
+  // )
 
   if (campuses.length === 1) {
     $item('#tagCampus').label = campuses[0].campusFullTitle
@@ -65,16 +93,54 @@ const prepareRepeaterEvents = async ($item, itemData) => {
       .catch((error) => console.log(`Hide Error: ${error.message}`))
   }
 
-  $item('#textTime')[itemData.isSpecial ? 'hide' : 'show']()
-  $item('#textDate')[itemData.isSpecial ? 'hide' : 'show']()
+  $item('#textTime')[itemData.isSpecial ? 'collapse' : 'expand']()
+  // $item('#textDate')[itemData.isSpecial ? 'hide' : 'show']()
   $item('#textLocation')[itemData.isSpecial ? 'hide' : 'show']()
 }
 
+const handleLoadMoreButton = async () => {
+  if (eventsState.eventsQuery.hasNext()) {
+    const nextEvents = await eventsState.eventsQuery.next()
+    eventsState.setEventsQuery(nextEvents)
+    eventsState.setAllEvents([...eventsState.allEvents, ...nextEvents.items])
+  }
+  if (eventsState.specialEventsQuery.hasNext()) {
+    const nextSpecialEvents = await eventsState.specialEventsQuery.next()
+    eventsState.setSpecialEventsQuery(nextSpecialEvents)
+    const parsedNextSpecialEvents = parseSpecialEvents(nextSpecialEvents.items)
+    eventsState.setAllEvents([
+      ...eventsState.allEvents,
+      ...parsedNextSpecialEvents
+    ])
+  }
+}
+
 $w.onReady(async () => {
-  const specialEvents = await getSpecialEvents({ date: new Date() })
+  eventsState.setSpecialEventsQuery(
+    await getSpecialEvents({ date: new Date() })
+  )
+  eventsState.setEventsQuery(await getEvents({ start: new Date() }))
+
+  console.log(eventsState.eventsQuery.items)
+
+  const parsedSpecialEvents = parseSpecialEvents(
+    eventsState.specialEventsQuery.items
+  )
+  eventsState.setAllEvents([
+    ...eventsState.eventsQuery.items,
+    ...parsedSpecialEvents
+  ])
+
   $w('#repeaterSpecial').onItemReady(prepareRepeaterSpecial)
-  $w('#repeaterSpecial').data = specialEvents
+  $w('#repeaterSpecial').data = eventsState.specialEventsQuery.items
   // $w('#sectionSpecial')[specialEvents.length ? 'expand' : 'collapse']()
 
   $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
+  // $w('#repeaterEvents').data = eventsState.sortedAllEvents()
+  autorun(() => {
+    $w('#repeaterEvents').data = eventsState.sortedAllEvents
+    $w('#loadMoreButton')[eventsState.eventsQuery.hasNext() ? 'show' : 'hide']()
+  })
+
+  $w('#loadMoreButton').onClick(handleLoadMoreButton)
 })
