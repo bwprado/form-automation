@@ -74,8 +74,9 @@ async function parseSpecialEventFunction(specialEvents) {
     _id: specialEvent._id,
     eventTitle: specialEvent.title,
     eventDescription: specialEvent.eventDescription,
-    eventImageLandscape: specialEvent.scheduleBackgroundImage,
-    date: specialEvent?.date || null,
+    eventImageLandscape: specialEvent.image,
+    eventStartDate: specialEvent.date,
+    eventEndDate: specialEvent.date,
     ['link-events-eventTitle']: specialEvent['link-special-event-title'],
     isSpecial: true
   }))
@@ -88,20 +89,31 @@ export const parseSpecialEvent = webMethod(
 
 /**
  *
- * @param {Object} options
- * @param {Date} options.date
- * @returns {Promise<SpecialEvent[]>}
+ * @param {Object} params
+ * @param {Date} params.date
+ * @param {Campuses[]} params.campuses
+ * @param {boolean} params.hideEvents
+ * @returns {Promise<ParsedSpecialEvent[]>}
  */
-async function getSpecialEventsFunction({ date }) {
+async function getSpecialEventsFunction({ date, campuses = [], hideEvents }) {
   try {
     let specialEventsQuery = await wixData
       .query('SpecialEvent')
       .ge('date', date)
       .limit(20)
 
+    specialEventsQuery =
+      campuses.length > 0
+        ? specialEventsQuery.hasSome('eventAssociatedCampuses', campuses)
+        : specialEventsQuery
+
+    specialEventsQuery = hideEvents
+      ? specialEventsQuery.eq('hideEvents', hideEvents)
+      : specialEventsQuery
+
     const { items: specialEvents } = await specialEventsQuery.find()
-    console.log(specialEvents)
-    return specialEvents
+
+    return parseSpecialEvent(specialEvents)
   } catch (error) {
     console.error(error)
     return []
@@ -164,7 +176,8 @@ function parseSpecialEventSchedule(specialEventSchedules) {
     eventTitle: special.referencedSpecialEvent.title,
     eventDescription: special.scheduleDescription,
     eventImageLandscape: special?.referencedSpecialEvent?.image,
-    date: format(parseISO(special?.date), 'MMM, dd yyyy') || null,
+    eventEndDate: special.date,
+    eventStartDate: special.date,
     ['link-events-eventTitle']:
       special.referencedSpecialEvent['link-special-event-title'],
     isSpecial: true
