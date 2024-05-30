@@ -4,14 +4,15 @@
  * @property {'hidden' | 'visible'} status
  * @property {string} eventTitle
  * @property {string} eventDescription
- * @property {string} eventStartDate
- * @property {string} eventEndDate
+ * @property {Date} eventStartDate
+ * @property {Date} eventEndDate
  * @property {string} eventImageLandscape
  * @property {string} eventLocationName
  * @property {string} redirectUrl
  * @property {string[]} serviceOpportunities
  * @property {string[]} eventMinistries
  * @property {string} eventAssociatedCampuses
+ * @property {boolean} eventNotFeatured
  * @property {string} eventVideo
  * @property {string} richDescription
  * @property {string} eventRegistrationUrl
@@ -70,9 +71,9 @@
  * @typedef {Object} SpecialEventSchedule
  * @property {string} _id
  * @property {string} _owner
- * @property {string} _createdDate
+ * @property {Date} _createdDate
  * @property {string} scheduleDescription
- * @property {string} _updatedDate
+ * @property {Date} _updatedDate
  * @property {string} scheduleTitle
  * @property {SpecialEvent} referencedSpecialEvent
  * @property {Date} date
