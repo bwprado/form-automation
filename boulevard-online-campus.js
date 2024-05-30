@@ -4,14 +4,20 @@ import wixSite from 'wix-site'
 import wixData from 'wix-data'
 
 import { Campuses } from 'public/types/campuses'
-import { getAllEvents } from 'backend/database/events.web'
+import { getEvents, getSpecialEvents } from 'backend/database/events.web'
 
 $w.onReady(async function () {
-  const allEvents = await getAllEvents({
+  const events = await getEvents({
     start: new Date(),
     campuses: [Campuses.Online]
   })
-  console.log(allEvents)
+  console.log(events)
+  const specialEvents = await getSpecialEvents({
+    date: new Date(),
+    campuses: [Campuses.Online]
+  })
+
+  console.log([...events, ...specialEvents])
   // Prefetch
   let response = wixSite.prefetchPageResources({
     pages: ['/boulevard-kids-east', '/campus-west-murfreesboro', '/new-home']
@@ -61,14 +67,8 @@ $w.onReady(async function () {
     $w('#datasetEvents').onReady(() => {
       let count = $w('#datasetEvents').getTotalCount()
 
-      if (count > 0) {
-        $w('#sectionEvents').expand()
-        $w('#noResText').hide()
-      }
-      if (count === 0) {
-        $w('#sectionEvents').collapse()
-        $w('#noResText').show()
-      }
+      $w('#sectionEvents')[count > 0 ? 'expand' : 'collapse']()
+      $w('#noResText')[count > 0 ? 'hide' : 'show']()
     })
   }
 })
