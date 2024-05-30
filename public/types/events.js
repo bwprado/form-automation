@@ -87,7 +87,8 @@
  * @property {string} eventTitle
  * @property {string} eventDescription
  * @property {string} eventImageLandscape
- * @property {Date} date
+ * @property {Date} eventStartDate
+ * @property {Date} eventEndDate
  * @property {string} link-events-eventTitle
  * @property {boolean} isSpecial
  */
