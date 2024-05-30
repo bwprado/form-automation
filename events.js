@@ -1,10 +1,23 @@
 import { getMultiReferencePropertyFromCollection } from 'public/dataUtilities.js'
-import { getAllEvents } from 'backend/database/events.web'
+import { getSpecialEvents } from 'backend/database/events.web'
 import { format } from 'date-fns'
 
 /**
  * @typedef {import('public/types/events').Event} Event
+ * @typedef {import('public/types/events').ParsedSpecialEvent} ParsedSpecialEvent
  */
+
+/**
+ * @function prepareRepeaterSpecial
+ * @description Prepare the special event repeater
+ * @param {any} $item
+ * @param {ParsedSpecialEvent} itemData
+ */
+const prepareRepeaterSpecial = async ($item, itemData) => {
+  $item('#textEventName').text = itemData.eventTitle
+  $item('#image').src = itemData.eventImageLandscape
+  $item('#buttonEvent').link = itemData['link-events-eventTitle']
+}
 
 /**
  *
@@ -58,56 +71,10 @@ const prepareRepeaterEvents = async ($item, itemData) => {
 }
 
 $w.onReady(async () => {
-  const allEvents = await getAllEvents({ end: new Date(), onHomePage: false })
+  const specialEvents = await getSpecialEvents({ date: new Date() })
+  $w('#repeaterSpecial').onItemReady(prepareRepeaterSpecial)
+  $w('#repeaterSpecial').data = specialEvents
+  // $w('#sectionSpecial')[specialEvents.length ? 'expand' : 'collapse']()
 
   $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
-  $w('#repeaterEvents').data = allEvents
-
-  //});
-
-  // No Repeater Results
-  // function errorTextResult() {
-  //     $w("#datasetEvents").onReady(() => {
-  //         let count = $w("#datasetEvents").getTotalCount();
-
-  //         if (count > 0) {
-  //             $w('#noResText').hide();
-
-  //         }
-  //         if (count === 0) {
-  //             $w('#noResText').show();
-  //         }
-  //     });
-  // }
 })
-
-// export async function repeater1_itemReady($item, itemData, index) {
-
-// 	let ministries = await wixData.queryReferenced("Events",itemData._id , "eventMinistries")
-
-//     if(ministries.items.length > 0){
-
-//         let opt =  ministries.items
-
-//         let option =opt.map(item=>{return{  value:item.ministryTitle  ,label:item.ministryTitle }})
-
-//         $item('#ministriesTags').options = option
-
-//     }else{ $item('#ministriesTags').options = []}
-
-//     let campuses = await wixData.queryReferenced("Events",itemData._id , "eventAssociatedCampuses")
-
-//     if(campuses.items.length > 0){
-
-//         let opt = campuses.items
-
-//         let optionCampus =opt.map(item=>{return{  value:item.campusFullTitle  ,label:item.campusFullTitle }})
-
-//         $item('#campusTagSelection').options = optionCampus
-
-//     }else{ $item('#campusTagSelection').options = []}
-// }
-
-// export function loadmoreButton_click(event) {
-// 	$w("#datasetEvents").loadMore()
-// }
