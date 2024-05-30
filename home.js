@@ -5,7 +5,7 @@ import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
 import wixWindow from 'wix-window'
 
-import { getEvents, getSpecialEvents } from 'backend/database/events.web'
+import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
 import { format } from 'date-fns'
 
 let timelineA = wixAnimations.timeline()
@@ -15,20 +15,17 @@ let timelineA = wixAnimations.timeline()
  */
 
 $w.onReady(async function () {
-  const events = await getEvents({ end: new Date(), onHomePage: true })
-  const specialEvents = await getSpecialEvents({
-    date: new Date()
-  })
+  const eventsQuery = await getEvents({ end: new Date(), onHomePage: true })
+  const specialEventsQuery = await getSpecialEvents({ date: new Date() })
 
-  console.log([...events, ...specialEvents])
-
-  const allEvents = [...events, ...specialEvents].sort(
-    (a, b) => a.eventEndDate - b.eventEndDate
-  )
+  const parsedSpecialEvents = parseSpecialEvents(specialEventsQuery.items)
+  const allEvents = [...eventsQuery.items, ...parsedSpecialEvents].sort((a, b) => a.eventEndDate - b.eventEndDate)
 
   $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
   $w('#repeaterEvents').data = allEvents
   $w('#sectionUpcomingEvents')[allEvents.length ? 'expand' : 'collapse']()
+
+  await setCommingUpEvent(allEvents)
 
   $w('#buttonWaysToGive').onClick(() => wixLocation.to('/ways-to-give'))
 
@@ -60,92 +57,7 @@ $w.onReady(async function () {
     // handle errors
   }
 
-  // }
-
   const myArrowA = $w('#vectorArrowA')
-
-  // original code for Countdown
-  // $w('#boxCountdown').hide();
-
-  // if (wixWindow.rendering.env === 'browser' || wixWindow.viewMode === 'Preview') {
-  //     // only when in Front End so we get the user's local time (and not the server time)
-  //     // otherwise, the display "flashes" - first the server's rendering, and then the local rendering
-
-  //     const msSecond = 1000; // milliseconds in a second
-  //     const msMinute = msSecond * 60; // milliseconds in minute
-  //     const msHour = msMinute * 60; // milliseconds in
-
-  //     // ======> set this to your event date and time <========
-  //     let partyDate = new Date("Nov 14, 2021 10:20:00"); // set this field for your event start
-  //     let partyLength = msHour * 1.25; // set this to the length of your event
-  //     //-------------------------------------------------------
-
-  //     let startParty = partyDate.getTime();
-  //     let endParty = startParty + partyLength; // party ends after two hours
-
-  //     let countdown = setInterval(function () {
-
-  //         let now = new Date().getTime();
-  //         let timeDiff;
-
-  //         const dateOptions = {
-  //             month: 'short',
-  //             day: 'numeric',
-  //             year: 'numeric',
-  //             hour: 'numeric',
-  //             minute: 'numeric'
-  //         }
-  //         if (now < startParty) {
-  //             // countdown till party starts
-  //             $w('#message').text = "NEXT LIVE STREAM";
-  //             timeDiff = startParty - now;
-  //         } else {
-  //             // countdown till party over
-  //             $w('#message').text = "WE'RE LIVE NOW";
-  //             // $w('#vectorCircleRed').show();
-  //             timeDiff = endParty - now;
-  //         }
-
-  //         let daysDiff = Math.floor(timeDiff / (msHour * 24));
-  //         let hoursDiff = Math.floor((timeDiff % (msHour * 24)) / msHour);
-  //         let minutesDiff = Math.floor((timeDiff % msHour) / msMinute);
-  //         let secondsDiff = Math.floor((timeDiff % msMinute) / msSecond);
-
-  //         $w("#days").text = "" + daysDiff;
-  //         $w("#hours").text = "" + hoursDiff;
-  //         $w("#minutes").text = "" + minutesDiff;
-  //         $w("#seconds").text = "" + secondsDiff;
-  //         $w('#boxCountdown').show();
-  //     }, 1000);
-  // }
-
-  //filter Featured Event
-  var today = new Date()
-  $w('#datasetFeaturedEvent')
-    .setFilter(
-      wixData
-        .filter()
-        .ge('eventEndDate', today)
-        .eq('eventOnHomepage', true)
-        .ne('ministrySpecificEvent', true)
-        .ne('eventNotFeatured', true)
-        .ne('eventIsHidden', true)
-    )
-    .then(() => {})
-
-  //filter Event slider
-  var today = new Date()
-
-  // redirect Featured Event if redirect url exists
-  // this code does not work
-  $w('#datasetFeaturedEvent').onReady(() => {
-    let item = $w('#datasetFeaturedEvent').getCurrentItem()
-    let featuredRedirectUrl = item.redirectUrl
-
-    item.redirectUrl
-      ? ($w('#buttonFeaturedEvent').link = featuredRedirectUrl)
-      : $w('#buttonFeaturedEvent').link
-  })
 
   //Help section animation
   timelineA.add(myArrowA, {
@@ -183,4 +95,18 @@ async function prepareRepeaterEvents($item, itemData) {
     ? format(itemData.eventEndDate, 'MMM d, yyyy')
     : '-'
   // $item('#textDate')[itemData?.isSpecial ? 'hide' : 'show']()
+}
+
+/**
+ * @function setCommingUpEvent
+ * @param {Event[]} allEvents
+ */
+async function setCommingUpEvent(allEvents) {
+  const upcomingEvent = allEvents
+    .filter((event) => !event.eventNotFeatured)
+    //@ts-ignore
+    .sort((a, b) => a.eventStartDate - b.eventStartDate)[0]
+
+  $w('#imageComingUp').src = upcomingEvent.eventImageLandscape
+  $w('#buttonFeaturedEvent').link = upcomingEvent['link-events-eventTitle']
 }
