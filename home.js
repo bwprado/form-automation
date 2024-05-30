@@ -5,10 +5,7 @@ import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
 import wixWindow from 'wix-window'
 
-import {
-  getEvents,
-  getSpecialEventSchedule,
-} from 'backend/database/events.web'
+import { getEvents, getSpecialEvents } from 'backend/database/events.web'
 import { format } from 'date-fns'
 
 let timelineA = wixAnimations.timeline()
@@ -19,9 +16,15 @@ let timelineA = wixAnimations.timeline()
 
 $w.onReady(async function () {
   const events = await getEvents({ end: new Date(), onHomePage: true })
-  const specialEvents = await getSpecialEventSchedule({ date: format(new Date(), "yyyy-MM-dd") })
-  console.log({ events, specialEvents })
-  const allEvents = [...events, ...specialEvents]
+  const specialEvents = await getSpecialEvents({
+    date: new Date()
+  })
+
+  console.log([...events, ...specialEvents])
+
+  const allEvents = [...events, ...specialEvents].sort(
+    (a, b) => a.eventEndDate - b.eventEndDate
+  )
 
   $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
   $w('#repeaterEvents').data = allEvents
@@ -179,5 +182,5 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#textDate').text = itemData?.eventEndDate
     ? format(itemData.eventEndDate, 'MMM d, yyyy')
     : '-'
-  $item('#textDate')[itemData?.isSpecial ? 'hide' : 'show']()
+  // $item('#textDate')[itemData?.isSpecial ? 'hide' : 'show']()
 }
