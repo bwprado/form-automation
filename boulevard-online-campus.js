@@ -4,20 +4,24 @@ import wixSite from 'wix-site'
 import wixData from 'wix-data'
 
 import { Campuses } from 'public/types/campuses'
-import { getEvents, getSpecialEvents } from 'backend/database/events.web'
+import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
 
 $w.onReady(async function () {
-  const events = await getEvents({
+  const eventsQuery = await getEvents({
     start: new Date(),
     campuses: [Campuses.Online]
   })
-  console.log(events)
-  const specialEvents = await getSpecialEvents({
+  const specialEventsQuery = await getSpecialEvents({
     date: new Date(),
     campuses: [Campuses.Online]
   })
 
-  console.log([...events, ...specialEvents])
+  const allEvents = [
+    ...eventsQuery.items,
+    ...parseSpecialEvents(specialEventsQuery.items)
+  ].sort((a, b) => a.eventEndDate - b.eventEndDate)
+
+  console.log(allEvents)
   // Prefetch
   let response = wixSite.prefetchPageResources({
     pages: ['/boulevard-kids-east', '/campus-west-murfreesboro', '/new-home']
@@ -38,12 +42,7 @@ $w.onReady(async function () {
     $item('#buttonContact').link =
       'mailto:' + itemData.staffEmail + '?subject=Boulevard Online Campus'
 
-    // Staff Contact Button
-    if (itemData.staffEmail) {
-      $item('#buttonContact').show()
-    } else {
-      $item('#buttonContact').hide()
-    }
+    $item('#buttonContact')[itemData?.staffEmail ? 'show' : 'hide']()
   })
 
   //filter past Event Dates & Campus
