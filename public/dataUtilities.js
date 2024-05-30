@@ -34,6 +34,13 @@ export async function getAllData(dataCollection) {
   }
 }
 
+/**
+ * @function getMultiReferencePropertyFromCollection
+ * @param {string} multiRefColumn
+ * @param {string} collection
+ * @param {string} collectionId
+ * @returns {Promise<any[]>}
+ */
 export async function getMultiReferencePropertyFromCollection(
   multiRefColumn,
   collection,
