@@ -1,8 +1,13 @@
 import wixData from 'wix-data'
 
-import { Permissions, webMethod } from 'wix-web-module'
 import { uniqBy } from 'lodash'
-import { format, parseISO } from 'date-fns'
+import { WixDataQueryResult } from 'wix-data'
+import { Permissions, webMethod } from 'wix-web-module'
+
+const WixDataQueryResultEmpty = {
+  currentPage: 0,
+  items: []
+}
 
 /**
  * @typedef {import('public/types/events').Event} Event
@@ -16,13 +21,13 @@ import { format, parseISO } from 'date-fns'
  * @function getEventsFromToday
  * @description Get events from today
  * @param {Object} options - options
- * @param {Date} options.start - start date
- * @param {Date} options.end - end date
- * @param {boolean} options.onHomePage - on home page
- * @param {boolean} options.isHidden - is hidden
- * @param {boolean} options.ministrySpecific - ministry specific
- * @param {Campuses[]} options.campuses - campuses
- * @returns {Promise<Event[] | []>}
+ * @param {Date} [options.start] - start date
+ * @param {Date} [options.end] - end date
+ * @param {boolean} [options.onHomePage] - on home page
+ * @param {boolean} [options.isHidden] - is hidden
+ * @param {boolean} [options.ministrySpecific] - ministry specific
+ * @param {Campuses[]} [options.campuses] - campuses
+ * @returns {Promise<WixDataQueryResult | any>}
  */
 async function getEventsFunction({
   start = null,
@@ -36,7 +41,7 @@ async function getEventsFunction({
     let eventsQuery = await wixData
       .query('Events')
       .limit(20)
-      .ascending('eventEndDate')
+      .descending('eventEndDate')
 
     eventsQuery = isHidden
       ? eventsQuery.eq('eventIsHidden', isHidden)
@@ -54,11 +59,10 @@ async function getEventsFunction({
     eventsQuery = start ? eventsQuery.ge('eventStartDate', start) : eventsQuery
     eventsQuery = end ? eventsQuery.ge('eventEndDate', end) : eventsQuery
 
-    const { items: events } = await eventsQuery.find()
-    return events
+    return await eventsQuery.find()
   } catch (error) {
     console.error(error)
-    return []
+    return WixDataQueryResultEmpty
   }
 }
 
@@ -90,16 +94,17 @@ export const parseSpecialEvent = webMethod(
 /**
  *
  * @param {Object} params
- * @param {Date} params.date
- * @param {Campuses[]} params.campuses
- * @param {boolean} params.hideEvents
- * @returns {Promise<ParsedSpecialEvent[]>}
+ * @param {Date} [params.date]
+ * @param {Campuses[]} [params.campuses]
+ * @param {boolean} [params.hideEvents]
+ * @returns {Promise<WixDataQueryResult | any>}
  */
 async function getSpecialEventsFunction({ date, campuses = [], hideEvents }) {
   try {
     let specialEventsQuery = await wixData
       .query('SpecialEvent')
       .ge('date', date)
+      .descending('date')
       .limit(20)
 
     specialEventsQuery =
@@ -111,12 +116,10 @@ async function getSpecialEventsFunction({ date, campuses = [], hideEvents }) {
       ? specialEventsQuery.eq('hideEvents', hideEvents)
       : specialEventsQuery
 
-    const { items: specialEvents } = await specialEventsQuery.find()
-
-    return parseSpecialEvent(specialEvents)
+    return await specialEventsQuery.find()
   } catch (error) {
     console.error(error)
-    return []
+    return WixDataQueryResultEmpty
   }
 }
 
@@ -183,3 +186,25 @@ function parseSpecialEventSchedule(specialEventSchedules) {
     isSpecial: true
   }))
 }
+
+/**
+ * @function getAllEventsFunction
+ * @description Get all events
+ * @param {Object} params
+ * @param {Date} params.date
+ * @param {boolean} params.onHomePage
+ * @returns {Promise<{eventsQuery: WixDataQueryResult, specialEventsQuery: WixDataQueryResult} | any>}
+ */
+async function getAllEventsFunction({ date = new Date(), onHomePage }) {
+  try {
+    const eventsQuery = await getEvents({ end: date, onHomePage })
+    const specialEventsQuery = await getSpecialEvents({ date })
+
+    return { eventsQuery, specialEventsQuery }
+  } catch (error) {
+    console.error(error)
+    return WixDataQueryResultEmpty
+  }
+}
+
+export const getAllEvents = webMethod(Permissions.Anyone, getAllEventsFunction)
