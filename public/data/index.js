@@ -8,11 +8,11 @@ const WixDataQueryResultEmpty = {
 }
 
 /**
- * @typedef {import('public/types/events').Event} Event
- * @typedef {import('public/types/events').Campuses} Campuses
- * @typedef {import('public/types/events').SpecialEvent} SpecialEvent
- * @typedef {import('public/types/events').ParsedSpecialEvent} ParsedSpecialEvent
- * @typedef {import('public/types/events').SpecialEventSchedule} SpecialEventSchedule
+ * @typedef {import('public/types').Event} Event
+ * @typedef {import('public/types').Campuses} Campuses
+ * @typedef {import('public/types').SpecialEvent} SpecialEvent
+ * @typedef {import('public/types').ParsedSpecialEvent} ParsedSpecialEvent
+ * @typedef {import('public/types').SpecialEventSchedule} SpecialEventSchedule
  */
 
 /**
@@ -25,6 +25,9 @@ const WixDataQueryResultEmpty = {
  * @param {boolean} [options.isHidden] - is hidden
  * @param {boolean} [options.ministrySpecific] - ministry specific
  * @param {Campuses[]} [options.campuses] - campuses
+ * @param {Object} [options.sorting] - sorting
+ * @param {string} [options.sorting.field] - sorting field
+ * @param {'ascending' | 'descending'} [options.sorting.order] - sorting order
  * @returns {Promise<Partial<WixDataQueryResult>>}
  */
 export async function getEvents({
@@ -33,10 +36,16 @@ export async function getEvents({
   onHomePage = false,
   isHidden = false,
   ministrySpecific = false,
-  campuses = []
+  campuses = [],
+  sorting = {
+    field: 'eventStartDate',
+    order: 'ascending'
+  }
 }) {
   try {
     let eventsQuery = await wixData.query('Events').limit(20)
+
+    eventsQuery = eventsQuery[sorting.order](sorting.field)
 
     eventsQuery = isHidden
       ? eventsQuery.eq('eventIsHidden', isHidden)
