@@ -10,16 +10,22 @@ import { format } from 'date-fns'
 
 let timelineA = wixAnimations.timeline()
 /**
- * @typedef {import('public/types/events').Event} Event
- * @typedef {import('public/types/events').SpecialEvent} SpecialEvent
+ * @typedef {import('public/types').Event} Event
+ * @typedef {import('public/types').SpecialEvent} SpecialEvent
  */
 
 $w.onReady(async function () {
-  const eventsQuery = await getEvents({ end: new Date(), onHomePage: true })
+  const eventsQuery = await getEvents({
+    end: new Date(),
+    onHomePage: true,
+    sorting: { field: 'eventEndDate', order: 'ascending' }
+  })
   const specialEventsQuery = await getSpecialEvents({ date: new Date() })
 
   const parsedSpecialEvents = parseSpecialEvents(specialEventsQuery.items)
-  const allEvents = [...eventsQuery.items, ...parsedSpecialEvents].sort((a, b) => a.eventEndDate - b.eventEndDate)
+  const allEvents = [...eventsQuery.items, ...parsedSpecialEvents].sort(
+    (a, b) => a.eventEndDate - b.eventEndDate
+  )
 
   $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
   $w('#repeaterEvents').data = allEvents
