@@ -25,8 +25,8 @@ const eventsState = observable({
 })
 
 /**
- * @typedef {import('public/types/events').Event} Event
- * @typedef {import('public/types/events').ParsedSpecialEvent} ParsedSpecialEvent
+ * @typedef {import('public/types').Event} Event
+ * @typedef {import('public/types').ParsedSpecialEvent} ParsedSpecialEvent
  */
 
 /**
@@ -70,11 +70,6 @@ const prepareRepeaterEvents = async ($item, itemData) => {
         itemData._id
       )
     : []
-  // console.log(
-  //   `campuses [${campuses.length}] event: [${
-  //     itemData.eventTitle
-  //   }] color ${JSON.stringify($item('#tagCampus').style)}`
-  // )
 
   if (campuses.length === 1) {
     $item('#tagCampus').label = campuses[0].campusFullTitle
@@ -92,10 +87,6 @@ const prepareRepeaterEvents = async ($item, itemData) => {
       .collapse()
       .catch((error) => console.log(`Hide Error: ${error.message}`))
   }
-
-  $item('#textTime')[itemData.isSpecial ? 'collapse' : 'expand']()
-  // $item('#textDate')[itemData.isSpecial ? 'hide' : 'show']()
-  $item('#textLocation')[itemData.isSpecial ? 'hide' : 'show']()
 }
 
 const handleLoadMoreButton = async () => {
@@ -121,8 +112,6 @@ $w.onReady(async () => {
   )
   eventsState.setEventsQuery(await getEvents({ start: new Date() }))
 
-  console.log(eventsState.eventsQuery.items)
-
   const parsedSpecialEvents = parseSpecialEvents(
     eventsState.specialEventsQuery.items
   )
@@ -133,10 +122,9 @@ $w.onReady(async () => {
 
   $w('#repeaterSpecial').onItemReady(prepareRepeaterSpecial)
   $w('#repeaterSpecial').data = eventsState.specialEventsQuery.items
-  // $w('#sectionSpecial')[specialEvents.length ? 'expand' : 'collapse']()
 
   $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
-  // $w('#repeaterEvents').data = eventsState.sortedAllEvents()
+
   autorun(() => {
     $w('#repeaterEvents').data = eventsState.sortedAllEvents
     $w('#loadMoreButton')[eventsState.eventsQuery.hasNext() ? 'show' : 'hide']()
