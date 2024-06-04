@@ -1,12 +1,35 @@
 // For full API documentation, including code examples, visit https://wix.to/94BuAAs
 import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
-import wixData from 'wix-data'
 
-import { Campuses } from 'public/types/campuses'
+import { format } from 'date-fns'
 import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
+import { Campuses } from 'public/types'
+
+/**
+ * @typedef {import('public/types').Event} Event
+ */
+
+/**
+ * @function prepareRepeaterEvents
+ * @param {any} $item
+ * @param {Event} itemData
+ */
+async function prepareRepeaterEvents($item, itemData) {
+  $item('#buttonEvent').link = itemData['link-events-eventTitle']
+  $item('#imageEvent').src = itemData.eventImageLandscape
+  $item('#textEventName').text = itemData.eventTitle
+  $item('#textDate').text = itemData?.eventEndDate
+    ? format(itemData.eventEndDate, 'MMM d, yyyy')
+    : '-'
+  $item('#textTime').text = itemData?.eventEndDate
+    ? format(itemData.eventEndDate, 'h:mm a')
+    : '-'
+}
 
 $w.onReady(async function () {
+  $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
+
   const eventsQuery = await getEvents({
     start: new Date(),
     campuses: [Campuses.Online]
@@ -21,15 +44,14 @@ $w.onReady(async function () {
     ...parseSpecialEvents(specialEventsQuery.items)
   ].sort((a, b) => a.eventEndDate - b.eventEndDate)
 
-  console.log(allEvents)
-  // Prefetch
-  let response = wixSite.prefetchPageResources({
+  $w('#repeaterEvents').data = allEvents
+
+  $w('#sectionEvents')[allEvents.length ? 'expand' : 'collapse']()
+  $w('#noResText')[allEvents.length ? 'hide' : 'show']()
+
+  wixSite.prefetchPageResources({
     pages: ['/boulevard-kids-east', '/campus-west-murfreesboro', '/new-home']
   })
-
-  if (response.errors) {
-    // handle errors
-  }
 
   // Dropdown Navigation
   $w('#dropdownCampus').onChange((event) => {
@@ -44,32 +66,6 @@ $w.onReady(async function () {
 
     $item('#buttonContact')[itemData?.staffEmail ? 'show' : 'hide']()
   })
-
-  //filter past Event Dates & Campus
-  var today = new Date()
-  $w('#datasetEvents')
-    .setFilter(
-      wixData
-        .filter()
-        .ge('eventStartDate', today)
-        .hasSome('eventAssociatedCampuses', [Campuses.Online])
-        .ne('eventIsHidden', true)
-        .ne('ministrySpecificEvent', true)
-    )
-    .then(() => {
-      // No Events Message
-      errorTextResult()
-    })
-
-  // No Event Repeater Results
-  function errorTextResult() {
-    $w('#datasetEvents').onReady(() => {
-      let count = $w('#datasetEvents').getTotalCount()
-
-      $w('#sectionEvents')[count > 0 ? 'expand' : 'collapse']()
-      $w('#noResText')[count > 0 ? 'hide' : 'show']()
-    })
-  }
 })
 
 // What to Expect
