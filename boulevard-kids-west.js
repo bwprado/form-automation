@@ -1,15 +1,11 @@
-// For full API documentation, including code examples, visit https://wix.to/94BuAAs
-import wixWindow from 'wix-window'
+import wixData from 'wix-data'
 import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
-import wixData from 'wix-data'
-import Color from 'color'
-import {
-  collapseElementsInRepeater,
-  setElementOpacity,
-  setColorsFullAlpha
-} from 'public/utils.js'
 
+import { format } from 'date-fns'
+import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
+import { Ministries } from 'public/types'
+import { setColorsFullAlpha, setElementOpacity } from 'public/utils.js'
 // Resource type selection array this is a global variable which could be managed in browser cache
 let arrKeyword = []
 
@@ -30,7 +26,48 @@ let overrideResourceRepeaterPageSize = true
 
 // Our main onReady event handler we will use asynch as the mode of use so that
 // we can simplify the use of promise based functions.
-$w.onReady(async () => {
+
+/**
+ * @typedef {import('public/types').Event} Event
+ */
+
+/**
+ * @function prepareRepeaterEvents
+ * @param {any} $item
+ * @param {Event} itemData
+ */
+async function prepareRepeaterEvents($item, itemData) {
+  $item('#buttonEvent').link = itemData['link-events-eventTitle']
+  $item('#imageEvent').src = itemData.eventImageLandscape
+  $item('#textEventName').text = itemData.eventTitle
+  $item('#textDate').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'MMM d, yyyy')
+    : '-'
+  $item('#textTime').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'h:mm a')
+    : '-'
+}
+
+$w.onReady(async function () {
+  $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
+
+  const eventsQuery = await getEvents({
+    start: new Date(),
+    ministries: [Ministries.BoulevardKidsWest]
+  })
+  const specialEventsQuery = await getSpecialEvents({
+    date: new Date()
+  })
+
+  const allEvents = [
+    ...eventsQuery.items,
+    ...parseSpecialEvents(specialEventsQuery.items)
+  ].sort((a, b) => a.eventStartDate - b.eventStartDate)
+
+  $w('#repeaterEvents').data = allEvents
+
+  $w('#sectionEvents')[allEvents.length ? 'expand' : 'collapse']()
+  $w('#noResText')[allEvents.length ? 'hide' : 'show']()
   // Configure handlers
   // Only create handler once in the onReady scope
 
@@ -40,60 +77,19 @@ $w.onReady(async () => {
     pages: ['/boulevard-kids-east']
   })
 
-  if (response.errors) {
-    // handle errors
-  }
-
   // RESOURCES hide & show text, color control
   $w('#repeaterResourceType').onItemReady(adjustResourceTypeItem)
   $w('#buttonItem').onClick(filterByResourceType)
   $w('#expandResourceSelection').onClick(loadMoreResourcesToggle)
-  // $w('#resourceSelected').onClick(filterByResourceType); // We are not using the x icon so disable the click handler
 
   console.log(`preFetchResponse: ${JSON.stringify(response)}`)
 
   collapseLoaderGif()
 
-  if (response.errors) {
-    // handle errors
-  }
-
-  // filter past Event Dates & Campus
-  var today = new Date()
-
-  // Use await instead of promise construct as it is easier to work with.
-  await $w('#datasetEvents').setFilter(
-    wixData
-      .filter()
-      .ge('eventStartDate', today)
-      //.eq('ministrySpecificEvent', true)
-      .hasSome('eventMinistries', [
-        'b594a941-1bd9-45b6-859d-9fb59eba3433',
-        '04b632be-e422-4648-afca-be5c2a468b0f'
-      ])
-      .ne('eventIsHidden', true)
-  )
-
-  checkEventFilterResult()
-
   onReadyActions()
 })
 
-/*
-// Lightbox URL
-function open_Lightbox() {
-    let query = wixLocation.query;
-    var goto = query.name;
-
-    wixWindow.openLightbox(goto); 
-}
-*/
-
 function onReadyActions() {
-  /*
-    open_Lightbox();
-    */
-
   // Staff Email Buttons
   $w('#repeaterStaff').onItemReady(($item, itemData, index) => {
     $item('#buttonContact').link =
@@ -112,63 +108,11 @@ function onReadyActions() {
     wixLocation.to(dropdownurl)
   })
 
-  // filter past Event Dates & Campus
-  var today = new Date()
-  $w('#datasetEvents')
-    .setFilter(
-      wixData
-        .filter()
-        .ge('eventStartDate', today)
-        //.eq('ministrySpecificEvent', true)
-        .hasSome('eventMinistries', ['04b632be-e422-4648-afca-be5c2a468b0f'])
-        .ne('eventIsHidden', true)
-    )
-    .then(() => {
-      // No Events Message
-      errorTextResult()
-    })
-
-  // No Events Repeater Results
-  function errorTextResult() {
-    $w('#datasetEvents').onReady(() => {
-      let count = $w('#datasetEvents').getTotalCount()
-
-      if (count > 0) {
-        $w('#sectionEvents').expand()
-        $w('#noResText').hide()
-      }
-      if (count === 0) {
-        $w('#sectionEvents').collapse()
-        $w('#noResText').show()
-      }
-    })
-  }
-
   // No Serve Repeater Results
   $w('#datasetServe').onReady(() => {
     let count = $w('#datasetServe').getTotalCount()
-
-    if (count > 0) {
-      $w('#sectionServe').expand()
-    }
-    if (count === 0) {
-      $w('#sectionServe').collapse()
-    }
+    $w('#sectionServe')[count > 0 ? 'expand' : 'collapse']()
   })
-}
-
-// Checks to see if the Events Repeater filter generated Results
-// Called after repeater filter has been triggered.
-function checkEventFilterResult() {
-  let count = $w('#datasetEvents').getTotalCount()
-
-  if (count > 0) {
-    $w('#sectionEvents').expand()
-    $w('#noResText').hide()
-  } else {
-    $w('#sectionEvents').collapse()
-    $w('#noResText').show()
-  }
 }
 
 // What to Expect
