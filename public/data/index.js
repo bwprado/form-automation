@@ -24,7 +24,8 @@ const WixDataQueryResultEmpty = {
  * @param {boolean} [options.onHomePage] - on home page
  * @param {boolean} [options.isHidden] - is hidden
  * @param {boolean} [options.ministrySpecific] - ministry specific
- * @param {Campuses[]} [options.campuses] - campuses
+ * @param {string[]} [options.ministries] - event ministries
+ * @param {string[]} [options.campuses] - campuses
  * @param {Object} [options.sorting] - sorting
  * @param {string} [options.sorting.field] - sorting field
  * @param {'ascending' | 'descending'} [options.sorting.order] - sorting order
@@ -37,6 +38,7 @@ export async function getEvents({
   isHidden = false,
   ministrySpecific = false,
   campuses = [],
+  ministries = [],
   sorting = {
     field: 'eventStartDate',
     order: 'ascending'
@@ -46,6 +48,10 @@ export async function getEvents({
     let eventsQuery = await wixData.query('Events').limit(20)
 
     eventsQuery = eventsQuery[sorting.order](sorting.field)
+
+    eventsQuery = ministries.length
+      ? eventsQuery.hasSome('eventMinistries', ministries)
+      : eventsQuery
 
     eventsQuery = isHidden
       ? eventsQuery.eq('eventIsHidden', isHidden)
@@ -75,7 +81,7 @@ export async function getEvents({
  * @description Get special events
  * @param {Object} params
  * @param {Date} [params.date]
- * @param {Campuses[]} [params.campuses]
+ * @param {string[]} [params.campuses]
  * @param {boolean} [params.hideEvents]
  * @returns {Promise<Partial<WixDataQueryResult>>}
  */
