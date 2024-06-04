@@ -18,11 +18,11 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#buttonEvent').link = itemData['link-events-eventTitle']
   $item('#imageEvent').src = itemData.eventImageLandscape
   $item('#textEventName').text = itemData.eventTitle
-  $item('#textDate').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'MMM d, yyyy')
+  $item('#textDate').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'MMM d, yyyy')
     : '-'
-  $item('#textTime').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'h:mm a')
+  $item('#textTime').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'h:mm a')
     : '-'
 }
 
@@ -40,7 +40,7 @@ $w.onReady(async function () {
   const allEvents = [
     ...eventsQuery.items,
     ...parseSpecialEvents(specialEventsQuery.items)
-  ].sort((a, b) => a.eventEndDate - b.eventEndDate)
+  ].sort((a, b) => a.eventStartDate - b.eventStartDate)
 
   $w('#repeaterEvents').data = allEvents
 
