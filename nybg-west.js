@@ -1,16 +1,55 @@
 import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
-import wixData from 'wix-data'
 
-$w.onReady(function () {
-  // Prefetch
-  let response = wixSite.prefetchPageResources({
-    pages: ['/nbyg-east']
+import { format } from 'date-fns'
+import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
+import { Ministries } from 'public/types'
+
+/**
+ * @typedef {import('public/types').Event} Event
+ */
+
+/**
+ * @function prepareRepeaterEvents
+ * @param {any} $item
+ * @param {Event} itemData
+ */
+async function prepareRepeaterEvents($item, itemData) {
+  $item('#buttonEvent').link = itemData['link-events-eventTitle']
+  $item('#imageEvent').src = itemData.eventImageLandscape
+  $item('#textEventName').text = itemData.eventTitle
+  $item('#textDate').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'MMM d, yyyy')
+    : '-'
+  $item('#textTime').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'h:mm a')
+    : '-'
+}
+
+$w.onReady(async function () {
+  $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
+
+  const eventsQuery = await getEvents({
+    start: new Date(),
+    ministries: [Ministries.nybgWest]
+  })
+  const specialEventsQuery = await getSpecialEvents({
+    date: new Date()
   })
 
-  if (response.errors) {
-    // handle errors
-  }
+  const allEvents = [
+    ...eventsQuery.items,
+    ...parseSpecialEvents(specialEventsQuery.items)
+  ].sort((a, b) => a.eventStartDate - b.eventStartDate)
+
+  $w('#repeaterEvents').data = allEvents
+
+  $w('#sectionEvents')[allEvents.length ? 'expand' : 'collapse']()
+  $w('#noResText')[allEvents.length ? 'hide' : 'show']()
+
+  wixSite.prefetchPageResources({
+    pages: ['/nbyg-east']
+  })
 
   // Staff Emails
   $w('#repeaterStaff').onItemReady(($item, itemData, index) => {
@@ -29,35 +68,4 @@ $w.onReady(function () {
     let dropdownurl = $w('#dropdownCampus').value
     wixLocation.to(dropdownurl)
   })
-
-  //filter past Event Dates & Campus
-  var today = new Date()
-  $w('#datasetEvents')
-    .setFilter(
-      wixData
-        .filter()
-        .ge('eventStartDate', today)
-        .hasSome('eventMinistries', ['ca34818d-3deb-4c1d-9a16-9fe6b0e4bf5a'])
-        .ne('eventIsHidden', true)
-    )
-    .then(() => {
-      // No Events Message
-      errorTextResult()
-    })
-
-  // No Repeater Results
-  function errorTextResult() {
-    $w('#datasetEvents').onReady(() => {
-      let count = $w('#datasetEvents').getTotalCount()
-
-      if (count > 0) {
-        $w('#noResText').hide()
-        $w('#sectionEvents').expand()
-      }
-      if (count === 0) {
-        $w('#noResText').show()
-        $w('#sectionEvents').collapse()
-      }
-    })
-  }
 })
