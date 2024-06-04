@@ -120,6 +120,7 @@ export function parseSpecialEvents(specialEvents) {
     _id: specialEvent._id,
     eventTitle: specialEvent.title,
     eventDescription: specialEvent.eventDescription,
+    eventLocationName: specialEvent.eventLocationName,
     eventImageLandscape: specialEvent.image,
     eventStartDate: specialEvent.date,
     eventEndDate: specialEvent.date,
