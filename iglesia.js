@@ -1,8 +1,52 @@
-// For full API documentation, including code examples, visit https://wix.to/94BuAAs
-import wixData from 'wix-data'
 import wixLocation from 'wix-location'
 
-$w.onReady(function () {
+import { format } from 'date-fns'
+import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
+import { Campuses } from 'public/types'
+
+/**
+ * @typedef {import('public/types').Event} Event
+ */
+
+/**
+ * @function prepareRepeaterEvents
+ * @param {any} $item
+ * @param {Event} itemData
+ */
+async function prepareRepeaterEvents($item, itemData) {
+  $item('#buttonEvent').link = itemData['link-events-eventTitle']
+  $item('#imageEvent').src = itemData.eventImageLandscape
+  $item('#textEventName').text = itemData.eventTitle
+  $item('#textDate').text = itemData?.eventEndDate
+    ? format(itemData.eventEndDate, 'MMM d, yyyy')
+    : '-'
+  $item('#textTime').text = itemData?.eventEndDate
+    ? format(itemData.eventEndDate, 'h:mm a')
+    : '-'
+}
+
+$w.onReady(async function () {
+  $w('#repeaterEvents').onItemReady(prepareRepeaterEvents)
+
+  const eventsQuery = await getEvents({
+    start: new Date(),
+    campuses: [Campuses.Iglesia]
+  })
+  const specialEventsQuery = await getSpecialEvents({
+    date: new Date(),
+    campuses: [Campuses.Iglesia]
+  })
+
+  const allEvents = [
+    ...eventsQuery.items,
+    ...parseSpecialEvents(specialEventsQuery.items)
+  ].sort((a, b) => a.eventEndDate - b.eventEndDate)
+
+  $w('#repeaterEvents').data = allEvents
+
+  $w('#sectionEvents')[allEvents.length ? 'expand' : 'collapse']()
+  $w('#noResText')[allEvents.length ? 'hide' : 'show']()
+
   // Dropdown Navigation
   $w('#dropdownCampus').onChange((event) => {
     let dropdownurl = $w('#dropdownCampus').value
@@ -20,40 +64,6 @@ $w.onReady(function () {
       $item('#buttonContact').hide()
     }
   })
-
-  //filter past Event Dates & Campus
-  var today = new Date()
-  $w('#datasetEvents')
-    .setFilter(
-      wixData
-        .filter()
-        .ge('eventStartDate', today)
-        .hasSome('eventAssociatedCampuses', [
-          '57c7dc4b-28bd-4718-ab44-f628c38cff4d'
-        ])
-        .ne('eventIsHidden', true)
-        .ne('ministrySpecificEvent', true)
-    )
-    .then(() => {
-      // No Events Message
-      errorTextResult()
-    })
-
-  // No Event Repeater Results
-  function errorTextResult() {
-    $w('#datasetEvents').onReady(() => {
-      let count = $w('#datasetEvents').getTotalCount()
-
-      if (count > 0) {
-        $w('#sectionEvents').expand()
-        $w('#noResText').hide()
-      }
-      if (count === 0) {
-        $w('#sectionEvents').collapse()
-        $w('#noResText').show()
-      }
-    })
-  }
 })
 
 // What to Expect
