@@ -49,43 +49,44 @@ export const Campuses = {
  */
 
 /**
- * @typedef {Object} SpecialEvent
- * @property {string} subtitle
- * @property {string} promoVideoUrl
- * @property {Date} _publishDate
- * @property {string} shortTitle
- * @property {string[]} directionsButtonLabel
- * @property {string} promoText
- * @property {string} image
- * @property {string} _id
- * @property {Date} _draftDate
- * @property {string} _owner
- * @property {string} imageH2
- * @property {Date} _createdDate
- * @property {string} imageH1
- * @property {boolean} hidePlanAVisit
- * @property {string} scheduleBackgroundImage
- * @property {Date} _updatedDate
- * @property {string} scheduleTitle
- * @property {string} imageH5
- * @property {string} directionsButtonUrl
- * @property {string} promoTitle
- * @property {string} shortTitleLogo
- * @property {string} imageV2
- * @property {Date} date
- * @property {string} link-special-event-title
- * @property {string} imageH4
- * @property {string} _publishStatus
- * @property {string} eventDescriptionImage
- * @property {string} title
- * @property {boolean} hidePresentedBy
- * @property {string} headerImage
- * @property {string} eventDescriptionTitle
- * @property {string} eventDescription
- * @property {string} imageV1
  * @property {boolean} hideEvents
+ * @property {boolean} hidePlanAVisit
+ * @property {boolean} hidePresentedBy
+ * @property {Date} _createdDate
+ * @property {Date} _draftDate
+ * @property {Date} _publishDate
+ * @property {Date} _updatedDate
+ * @property {Date} date
+ * @property {string[]} directionsButtonLabel
+ * @property {string} _id
+ * @property {string} _owner
+ * @property {string} _publishStatus
+ * @property {string} directionsButtonUrl
+ * @property {string} eventDescription
+ * @property {string} eventDescriptionImage
+ * @property {string} eventDescriptionTitle
+ * @property {string} eventLocationName
+ * @property {string} headerImage
+ * @property {string} image
+ * @property {string} imageH1
+ * @property {string} imageH2
  * @property {string} imageH3
+ * @property {string} imageH4
+ * @property {string} imageH5
+ * @property {string} imageV1
+ * @property {string} imageV2
+ * @property {string} link-special-event-title
  * @property {string} promoDownloadUrl
+ * @property {string} promoText
+ * @property {string} promoTitle
+ * @property {string} promoVideoUrl
+ * @property {string} scheduleBackgroundImage
+ * @property {string} scheduleTitle
+ * @property {string} shortTitle
+ * @property {string} shortTitleLogo
+ * @property {string} subtitle
+ * @property {string} title
+ * @typedef {Object} SpecialEvent
  */
 
 /**
@@ -109,6 +110,7 @@ export const Campuses = {
  * @property {string} eventTitle
  * @property {string} eventDescription
  * @property {string} eventImageLandscape
+ * @property {string} eventLocationName
  * @property {Date} eventStartDate
  * @property {Date} eventEndDate
  * @property {string} link-events-eventTitle
