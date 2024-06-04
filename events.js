@@ -107,6 +107,7 @@ const handleLoadMoreButton = async () => {
 }
 
 $w.onReady(async () => {
+  $w('#boxLoadingEvents').expand()
   eventsState.setSpecialEventsQuery(
     await getSpecialEvents({ date: new Date() })
   )
@@ -127,8 +128,13 @@ $w.onReady(async () => {
 
   autorun(() => {
     $w('#repeaterEvents').data = eventsState.sortedAllEvents
+    $w('#sectionEvents')[
+      eventsState.sortedAllEvents.length ? 'expand' : 'collapse'
+    ]()
+
     $w('#loadMoreButton')[eventsState.eventsQuery.hasNext() ? 'show' : 'hide']()
   })
 
   $w('#loadMoreButton').onClick(handleLoadMoreButton)
+  $w('#boxLoadingEvents').collapse()
 })
