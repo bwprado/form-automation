@@ -82,10 +82,16 @@ export async function getEvents({
  * @param {Object} params
  * @param {Date} [params.date]
  * @param {string[]} [params.campuses]
+ * @param {string[]} [params.ministries]
  * @param {boolean} [params.hideEvents]
  * @returns {Promise<Partial<WixDataQueryResult>>}
  */
-export async function getSpecialEvents({ date, campuses = [], hideEvents }) {
+export async function getSpecialEvents({
+  date,
+  campuses = [],
+  hideEvents,
+  ministries = []
+}) {
   try {
     let specialEventsQuery = await wixData
       .query('SpecialEvent')
@@ -95,7 +101,12 @@ export async function getSpecialEvents({ date, campuses = [], hideEvents }) {
 
     specialEventsQuery =
       campuses.length > 0
-        ? specialEventsQuery.hasSome('eventAssociatedCampuses', campuses)
+        ? specialEventsQuery.hasSome('campuses', campuses)
+        : specialEventsQuery
+
+    specialEventsQuery =
+      ministries.length > 0
+        ? specialEventsQuery.hasSome('ministries', ministries)
         : specialEventsQuery
 
     specialEventsQuery = hideEvents

@@ -1,6 +1,6 @@
 import wixData from 'wix-data'
 
-import { format } from 'date-fns'
+import { format, min } from 'date-fns'
 import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
 import { getMultiReferencePropertyFromCollection } from 'public/dataUtilities.js'
 
@@ -69,7 +69,8 @@ $w.onReady(async function () {
       ministries: [ministryTitle]
     })
     const specialEventsQuery = await getSpecialEvents({
-      date: new Date()
+      date: new Date(),
+      ministries: [ministryTitle]
     })
 
     const allEvents = [
