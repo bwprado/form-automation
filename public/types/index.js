@@ -117,4 +117,13 @@ export const Campuses = {
  * @property {boolean} isSpecial
  */
 
+/**
+ * @typedef {Object} Season
+ * @property {string} _id
+ * @property {Date} startDate
+ * @property {Date} endDate
+ * @property {string} label
+ * @property {string} href
+ */
+
 export const Types = {}
