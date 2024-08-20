@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "winter",
+    "label": "Winter Classes",
+    "href": "https://docs.google.com/document/d/1BaTEjXu2O8M7Cz_8sOt4SIc552KtDWgpOmKaPHEwElQ/edit?usp=sharing",
+    "startDate": "2024-06-22",
+    "endDate": "2024-09-22"
+  },
+  {
+    "_id": "spring",
+    "label": "Spring Classes",
+    "href": "https://docs.google.com/document/d/1QmhTbI1Jde7uy5Tdf_ksidwQMWxHcv0gFvQsBsf9D0Q/edit?usp=sharing",
+    "startDate": "2024-09-22",
+    "endDate": "2024-12-21"
+  },
+  {
+    "_id": "summer",
+    "label": "Summer Classes",
+    "href": "https://docs.google.com/document/d/1B3hBx21WChdWmimk86zCcotRMjgoHKeLfDO6bNQok9I/edit?usp=sharing",
+    "startDate": "2024-12-21",
+    "endDate": "2025-03-20"
+  },
+  {
+    "_id": "fall",
+    "label": "Fall Classes",
+    "href": "https://docs.google.com/document/d/1A2WiYorph7HjgiH7bAIC65Qn3M-CjtuVSOlVrTNQTP0/edit?usp=sharing",
+    "startDate": "2025-03-20",
+    "endDate": "2025-06-20"
+  }
+]
