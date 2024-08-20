@@ -1,6 +1,13 @@
 import wixData from 'wix-data'
+import { getCurrentSeasonInfo } from 'public/dynamic-button/index'
 
-$w.onReady(() => {
+$w.onReady(async () => {
+  const currentSeason = await getCurrentSeasonInfo(new Date())
+  console.log({ currentSeason })
+  $w('#btnClasses').label =
+    `${currentSeason?.label} (East)` || 'Current Classes (East)'
+  $w('#btnClasses').link = currentSeason?.href || '#'
+
   //buildCampus();
   populateLocation()
   //filterDayDropdown();
