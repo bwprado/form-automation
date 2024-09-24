@@ -33,7 +33,9 @@ $w.onReady(async function () {
 
 async function prepareRepeater($item, itemData) {
   let opportunities = serviceOpportunitiesById[itemData?._id]
-  let redirectUrl = itemData.ministryUrl
+  let linkUrl = itemData?.ministryUrl
+    ? itemData.ministryUrl
+    : itemData['link-ministries-ministryTitle']
 
   //TODO, conect that value to the UI
   $item('#buttonOpportunities').label = `${opportunities} opportunit${
@@ -44,13 +46,8 @@ async function prepareRepeater($item, itemData) {
 
   $item('#bannerCampus')[itemData?.ministryCampus ? 'show' : 'hide']()
 
-  // redirect if ministryUrl exists
-  if (redirectUrl) {
-    $item('#buttonMoreInfo').link = redirectUrl
-    $item('#buttonMoreInfo').target = '_self'
-  } else {
-    $item('#buttonMoreInfo').link
-  }
+  $item('#btnMoreInfo').link = linkUrl
+  $item('#btnMoreInfo').target = '_self'
 
   $item('#imageMinistry').src =
     itemData?.ministryLogo ||
