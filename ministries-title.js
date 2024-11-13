@@ -92,9 +92,9 @@ $w.onReady(async function () {
         $item('#buttonContact').hide()
       }
 
-      $w('#textContactCampus').text = itemData.jobTitle3
-        ? itemData.jobTitle3
-        : 'Ministries Leader'
+      // $w('#textCampusContact').text = itemData.jobTitle3
+      //   ? itemData.jobTitle3
+      //   : 'Ministries Leader'
     })
 
     // Ministry Video
