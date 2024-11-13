@@ -18,11 +18,11 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#buttonEvent').link = itemData['link-events-eventTitle']
   $item('#imageEvent').src = itemData.eventImageLandscape
   $item('#textEventName').text = itemData.eventTitle
-  $item('#textDate').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'MMM d, yyyy')
+  $item('#textDate').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'MMM d, yyyy')
     : '-'
-  $item('#textTime').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'h:mm a')
+  $item('#textTime').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'h:mm a')
     : '-'
 }
 
@@ -52,23 +52,37 @@ $w.onReady(async function () {
     pages: ['/boulevard-kids-east', '/campus-west-murfreesboro', '/new-home']
   })
 
+  //Dropdown Navigation
   $w('#dropdownCampus').onChange((event) => {
     let dropdownurl = $w('#dropdownCampus').value
     wixLocation.to(dropdownurl)
   })
 
+  // RESOURCES color control
+  $w('#repeaterResource').onItemReady(adjustResourceItem)
+
   // Staff emails
-  $w('#repeater5Staff').onItemReady(($item, itemData, index) => {
-    $item('#button5Contact').link =
+  $w('#repeaterStaff').onItemReady(($item, itemData, index) => {
+    $item('#buttonContact').link =
       'mailto:' + itemData.staffEmail + '?subject=East Campus'
     // Staff Contact Button
     if (itemData.staffEmail) {
-      $item('#button5Contact').show()
+      $item('#buttonContact').show()
     } else {
-      $item('#button5Contact').hide()
+      $item('#buttonContact').hide()
     }
   })
 })
+
+// Used to adjust the colors of the resource Type tiles in the repeater
+function adjustResourceItem($item, itemData, index) {
+  if (itemData.resourceColor) {
+    $item('#itemResource').style.backgroundColor = itemData.resourceColor
+  } else {
+    $item('#itemResource').style.backgroundColor = '#36424a'
+  }
+}
+
 // What to Expect
 export function buttonWorship_click(event) {
   $w('#buttonWorship').disable()
@@ -100,4 +114,12 @@ export function buttonAdults_click(event) {
   $w('#buttonYouth').enable()
   $w('#buttonAdults').disable()
   $w('#multiStateWhat').changeState('stateD')
+}
+
+export function vectorPhone_mouseIn(event) {
+  $w('#tooltipPhone').show()
+}
+
+export function vectorPhone_mouseOut(event) {
+  $w('#tooltipPhone').hide()
 }
