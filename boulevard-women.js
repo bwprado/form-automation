@@ -36,6 +36,25 @@ $w.onReady(function () {
         });
     */
 
+  //Classes repeater
+  $w('#repeater1').onItemReady(($w, itemData, index) => {
+    let buttonUrl = itemData.actionButtonUrl
+    let buttonLabel = itemData.actionButtonLabel
+    $w('#buttonAction').link = buttonUrl
+    //$w("#buttonAction").target = "_blank";
+
+    if (itemData.classPage) {
+      $w('#buttonWatch').expand()
+    } else {
+      $w('#buttonWatch').collapse()
+    }
+
+    // show/hide action button
+    itemData.actionButtonUrl
+      ? $w('#buttonAction').expand()
+      : $w('#buttonAction').collapse()
+  })
+
   //filter past Event Dates & Campus
   var today = new Date()
   $w('#datasetEvents')
