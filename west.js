@@ -18,11 +18,11 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#buttonEvent').link = itemData['link-events-eventTitle']
   $item('#imageEvent').src = itemData.eventImageLandscape
   $item('#textEventName').text = itemData.eventTitle
-  $item('#textDate').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'MMM d, yyyy')
+  $item('#textDate').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'MMM d, yyyy')
     : '-'
-  $item('#textTime').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'h:mm a')
+  $item('#textTime').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'h:mm a')
     : '-'
 }
 
@@ -37,7 +37,7 @@ $w.onReady(async function () {
     date: new Date(),
     campuses: [Campuses.West]
   })
-
+  console.log(specialEventsQuery.items)
   const allEvents = [
     ...eventsQuery.items,
     ...parseSpecialEvents(specialEventsQuery.items)
@@ -119,4 +119,12 @@ export function buttonAdults_click(event) {
   $w('#buttonYouth').enable()
   $w('#buttonAdults').disable()
   $w('#multiStateWhat').changeState('stateD')
+}
+
+export function vectorPhone_mouseIn(event) {
+  $w('#tooltipPhone').show()
+}
+
+export function vectorPhone_mouseOut(event) {
+  $w('#tooltipPhone').hide()
 }
