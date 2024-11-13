@@ -7,6 +7,7 @@ import wixData from 'wix-data'
 import { setElementOpacity, setColorsFullAlpha } from 'public/utils.js'
 import { format } from 'date-fns'
 import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
+import { getMultiReferencePropertyFromCollection } from 'public/dataUtilities.js'
 import { Ministries } from 'public/types'
 
 // Resource type selection array this is a global variable which could be managed in browser cache
