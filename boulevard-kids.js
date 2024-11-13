@@ -25,7 +25,9 @@ async function prepareRepeaterEvents($item, itemData) {
     ? format(itemData.eventStartDate, 'h:mm a')
     : '-'
 
-  let campuses = itemData
+  $item('#textDate, #textTime')[itemData?.isSimple ? 'hide' : 'show']()
+
+  const campuses = itemData
     ? await getMultiReferencePropertyFromCollection(
         'eventAssociatedCampuses',
         'Events',

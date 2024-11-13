@@ -100,7 +100,7 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#textDate').text = itemData?.eventEndDate
     ? format(itemData.eventEndDate, 'MMM d, yyyy')
     : '-'
-  // $item('#textDate')[itemData?.isSpecial ? 'hide' : 'show']()
+  $item('#textDate')[itemData?.isSimple ? 'hide' : 'show']()
 }
 
 /**

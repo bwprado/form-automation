@@ -22,18 +22,29 @@ export const Campuses = {
 /**
  * @typedef {Object} Event
  * @property {string} _id
+ * @property {string} _owner
+ * @property {Date} _createdDate
+ * @property {Date} _updatedDate
  * @property {'hidden' | 'visible'} status
  * @property {string} eventTitle
  * @property {string} eventDescription
+ * @property {string} eventShortDescription
  * @property {Date} eventStartDate
- * @property {Date} eventEndDate
+ * @property {boolean} eventIsFeatured
+ * @property {boolean} eventIsHidden
+ * @property {string} eventLocationOffCampus
+ * @property {string} eventOffCampusAddress
+ * @property {string} eventMediaGallery
+ * @property {string} eventImagePortrait
  * @property {string} eventImageLandscape
+ * @property {Date} eventEndDate
  * @property {string} eventLocationName
  * @property {string} redirectUrl
  * @property {string[]} serviceOpportunities
  * @property {string[]} eventMinistries
  * @property {string} eventAssociatedCampuses
  * @property {boolean} eventNotFeatured
+ * @property {boolean} isSimple
  * @property {string} eventVideo
  * @property {string} richDescription
  * @property {string} eventRegistrationUrl
@@ -49,6 +60,7 @@ export const Campuses = {
  */
 
 /**
+ * @typedef {Object} SpecialEvent
  * @property {boolean} hideEvents
  * @property {boolean} hidePlanAVisit
  * @property {boolean} hidePresentedBy
@@ -86,7 +98,6 @@ export const Campuses = {
  * @property {string} shortTitleLogo
  * @property {string} subtitle
  * @property {string} title
- * @typedef {Object} SpecialEvent
  */
 
 /**

@@ -23,6 +23,7 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#textTime').text = itemData?.eventStartDate
     ? format(itemData.eventStartDate, 'h:mm a')
     : '-'
+  $item('#textTime, #textDate')[itemData.isSimple ? 'hide' : 'show']()
 }
 
 $w.onReady(async function () {

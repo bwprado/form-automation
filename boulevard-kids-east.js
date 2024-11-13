@@ -1,4 +1,3 @@
-// For full API documentation, including code examples, visit https://wix.to/94BuAAs
 import wixWindow from 'wix-window'
 import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
@@ -7,7 +6,6 @@ import wixData from 'wix-data'
 import { setElementOpacity, setColorsFullAlpha } from 'public/utils.js'
 import { format } from 'date-fns'
 import { getEvents, getSpecialEvents, parseSpecialEvents } from 'public/data'
-import { getMultiReferencePropertyFromCollection } from 'public/dataUtilities.js'
 import { Ministries } from 'public/types'
 
 // Resource type selection array this is a global variable which could be managed in browser cache
@@ -47,6 +45,8 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#textTime').text = itemData?.eventStartDate
     ? format(itemData.eventStartDate, 'h:mm a')
     : '-'
+
+  $item('#textDate, #textTime')[itemData?.isSimple ? 'hide' : 'show']()
 }
 
 $w.onReady(async function () {

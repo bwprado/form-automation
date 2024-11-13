@@ -21,6 +21,9 @@ const prepareRepeaterEvents = async ($item, itemData) => {
     ? format(itemData.eventStartDate, 'h:mm a')
     : ''
   $item('#textEventLocation').text = itemData.eventLocationName
+  $item('#textEventLocation, #boxDateAndTime')[
+    itemData.isSimple ? 'hide' : 'show'
+  ]()
   $item('#buttonRegister').link = itemData?.eventRegistrationUrl || ''
   $item('#buttonMoreInfo').link = itemData['link-events-eventTitle']
   $item('#buttonEventInfo').link = itemData['link-events-eventTitle']
@@ -91,10 +94,6 @@ $w.onReady(async function () {
       } else {
         $item('#buttonContact').hide()
       }
-
-      // $w('#textCampusContact').text = itemData.jobTitle3
-      //   ? itemData.jobTitle3
-      //   : 'Ministries Leader'
     })
 
     // Ministry Video

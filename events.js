@@ -59,9 +59,9 @@ const prepareRepeaterEvents = async ($item, itemData) => {
   $item('#buttonEventInfo').link = itemData['link-events-eventTitle']
   $item('#imageEvent').src = itemData.eventImageLandscape
 
-  $item('#buttonRegister')[
-    itemData?.eventRegistrationUrl ? 'expand' : 'collapse'
-  ]()
+  $item('#textLocation')[itemData.isSimple ? 'hide' : 'show']()
+  $item('#textDate')[itemData.isSimple ? 'hide' : 'show']()
+  $item('#textTime')[itemData.isSimple ? 'hide' : 'show']()
 
   let campuses = itemData?._id
     ? await getMultiReferencePropertyFromCollection(

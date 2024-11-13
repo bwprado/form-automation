@@ -1,126 +1,65 @@
-// For full API documentation, including code examples, visit https://wix.to/94BuAAs
+import wixSite from 'wix-site'
+import wixData from 'wix-data'
 
-import wixLocation from 'wix-location';
-import wixSite from 'wix-site';
-import wixData from "wix-data";
+$w.onReady(async function () {
+  noServe()
 
-$w.onReady(function () {
-    noServe();
+  // Prefetch
+  let response = wixSite.prefetchPageResources({
+    pages: ['/ministries']
+  })
 
-    // Prefetch
-    let response = wixSite.prefetchPageResources({
-        "pages": ["/ministries"]
-    });
+  if (response.errors) {
+    console.error(response.errors)
+  }
 
-    if (response.errors) {
-        // handle errors
-    }
+  $w('#repeaterStaff').onItemReady(($item, itemData, index) => {
+    $item('#buttonContact').link =
+      'mailto:' + itemData.email + '?subject=Young Adult Ministry'
+    $item('#buttonContact')[itemData.email ? 'show' : 'hide']()
+  })
 
-    // Staff Emails
-    $w("#repeaterStaff").onItemReady(($item, itemData, index) => {
-        $item("#buttonContact").link = "mailto:" + itemData.email + "?subject=Young Adult Ministry";
-        // Staff Contact Button
-        if (itemData.email) {
-            $item("#buttonContact").show();
-        } else {
-            $item("#buttonContact").hide();
-        }
-    });
+  $w('#repeater1').onItemReady(($w, itemData, index) => {
+    let buttonUrl = itemData.actionButtonUrl
+    $w('#buttonAction').link = buttonUrl
 
-    /*
-        // Campus Dropdown
-        $w("#dropdownCampus").onChange((event) => {
-            let dropdownurl = $w('#dropdownCampus').value;
-            wixLocation.to(dropdownurl);
-        });
-    */
+    $w('#buttonAction')[itemData.classPage ? 'expand' : 'collapse']()
+    $w('#buttonAction')[itemData.actionButtonUrl ? 'expand' : 'collapse']()
+  })
 
+  const today = new Date()
+  await $w('#datasetEvents').setFilter(
+    wixData
+      .filter()
+      .ge('eventEndDate', today)
+      .hasSome('eventMinistries', ['8df4de8b-4a7a-4d87-a356-a96613918d5b'])
+      .ne('eventIsHidden', true)
+  )
+  errorTextResult()
 
+  $w('#datasetEvents').onReady(() => {
+    $w('#repeaterEvents').onItemReady(async ($item, itemData, index) => {
+      $item('#boxDateAndTime, #textEventLocation')[
+        itemData?.isSimple ? 'hide' : 'show'
+      ]()
+    })
+  })
 
-//Classes repeater
-    $w('#repeater1').onItemReady(($w, itemData, index) => {
-        let buttonUrl = itemData.actionButtonUrl
-        let buttonLabel = itemData.actionButtonLabel
-        $w('#buttonAction').link = buttonUrl
-        //$w("#buttonAction").target = "_blank";
+  // No Event Repeater Results
+  function errorTextResult() {
+    $w('#datasetEvents').onReady(() => {
+      const count = $w('#datasetEvents').getTotalCount()
 
-        if (itemData.classPage) {
-            $w("#buttonAction").expand();
-        } else {
-            $w("#buttonAction").collapse();
-        }
+      $w('#sectionEvents')[count > 0 ? 'expand' : 'collapse']()
+    })
+  }
 
-        // show/hide action button
-        itemData.actionButtonUrl ?
-            $w('#buttonAction').expand() :
-            $w('#buttonAction').collapse()
+  // No Opportunities Repeater Results
+  function noServe() {
+    $w('#datasetServe').onReady(() => {
+      const count = $w('#datasetServe').getTotalCount()
 
-    });
-
-
-
-    //filter past Event Dates & Campus
-    var today = new Date();
-    $w('#datasetEvents').setFilter(wixData.filter()
-            .ge('eventEndDate', today)
-            .hasSome('eventMinistries', ["8df4de8b-4a7a-4d87-a356-a96613918d5b"])
-            .ne('eventIsHidden', true)
-
-        )
-        .then(() => {
-            // No Events Message
-            errorTextResult();
-
-        });
-
-    $w("#datasetEvents").onReady(() => {
-        $w("#repeaterEvents").onItemReady(async ($item, itemData, index) => {
-            //let redirectUrl = itemData.redirectUrl;
-            let isSpecial = itemData.isSpecial;
-
-            //collapse date&time&location if Special
-            if (isSpecial) {
-                $item("#textEventTime").hide()
-                $item("#textEventDate").hide()
-                $item("#textEventLocation").hide()
-            } else {
-                $item("#textEventTime").show()
-                $item("#textEventDate").show()
-                $item("#textEventLocation").show()
-            }
-        })
-    });
-
-    // No Event Repeater Results
-    function errorTextResult() {
-        $w("#datasetEvents").onReady(() => {
-            let count = $w("#datasetEvents").getTotalCount();
-
-            if (count > 0) {
-
-                $w('#sectionEvents').expand();
-
-            }
-            if (count === 0) {
-
-                $w('#sectionEvents').collapse();
-            }
-        });
-    }
-
-    // No Opportunities Repeater Results
-    function noServe() {
-        $w("#datasetServe").onReady(() => {
-            let count = $w("#datasetServe").getTotalCount();
-
-            if (count > 0) {
-                $w('#sectionOpportunities').expand();
-
-            }
-            if (count === 0) {
-                $w('#sectionOpportunities').collapse();
-            }
-        });
-    }
-
-});
+      $w('#sectionOpportunities')[count > 0 ? 'expand' : 'collapse']()
+    })
+  }
+})

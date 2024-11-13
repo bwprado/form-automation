@@ -1,4 +1,3 @@
-// For full API documentation, including code examples, visit https://wix.to/94BuAAs
 import wixLocation from 'wix-location'
 import wixSite from 'wix-site'
 
@@ -19,12 +18,13 @@ async function prepareRepeaterEvents($item, itemData) {
   $item('#buttonEvent').link = itemData['link-events-eventTitle']
   $item('#imageEvent').src = itemData.eventImageLandscape
   $item('#textEventName').text = itemData.eventTitle
-  $item('#textDate').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'MMM d, yyyy')
+  $item('#textDate').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'MMM d, yyyy')
     : '-'
-  $item('#textTime').text = itemData?.eventEndDate
-    ? format(itemData.eventEndDate, 'h:mm a')
+  $item('#textTime').text = itemData?.eventStartDate
+    ? format(itemData.eventStartDate, 'h:mm a')
     : '-'
+  $item('#textTime, #textDate')[itemData.isSimple ? 'hide' : 'show']()
 }
 
 $w.onReady(async function () {
