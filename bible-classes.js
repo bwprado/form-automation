@@ -3,15 +3,13 @@ import { getCurrentSeasonInfo } from 'public/dynamic-button/index'
 
 $w.onReady(async () => {
   const currentSeason = await getCurrentSeasonInfo(new Date())
-  console.log({ currentSeason })
-  $w('#btnClasses').label =
-    `${currentSeason?.label} (East)` || 'Current Classes (East)'
+
+  $w('#btnClasses').label = currentSeason?.label
+    ? `${currentSeason.label} (East)`
+    : 'Current Classes (East)'
   $w('#btnClasses').link = currentSeason?.href || '#'
 
-  //buildCampus();
   populateLocation()
-  //filterDayDropdown();
-  //filterCampusDropdown();
 
   $w('#dropdownCampus, #dropdownDay').onChange(() => {
     search()
@@ -33,15 +31,7 @@ $w.onReady(async () => {
     let buttonUrl = itemData.actionButtonUrl
     let buttonLabel = itemData.actionButtonLabel
     $w('#buttonAction').link = buttonUrl
-    //$w("#buttonAction").target = "_blank";
-    /*
-            if (itemData.classPage) {
-                $w("#buttonWatch").expand();
-            } else {
-                $w("#buttonWatch").collapse();
-            }
-        */
-    // show/hide action button
+
     itemData.actionButtonUrl
       ? $w('#buttonAction').expand()
       : $w('#buttonAction').collapse()
@@ -52,57 +42,6 @@ $w.onReady(async () => {
       : ($w('#buttonAction').label = 'Register')
   })
 })
-
-// THIS CODE DOES NOT WORK - WC
-// Attempt at coding the Current Classes button
-/*
-$w("#datasetSchedule").onReady(() => {
-
-    let seasonTag = $w("#datasetSchedule").getCurrentItem();
-    let springUrl = "https://docs.google.com/document/d/1QmhTbI1Jde7uy5Tdf_ksidwQMWxHcv0gFvQsBsf9D0Q/edit?usp=sharing";
-    let summerUrl = "https://docs.google.com/document/d/1B3hBx21WChdWmimk86zCcotRMjgoHKeLfDO6bNQok9I/edit?usp=sharing";
-    let fallUrl = "https://docs.google.com/document/d/1A2WiYorph7HjgiH7bAIC65Qn3M-CjtuVSOlVrTNQTP0/edit?usp=sharing";
-    let winterUrl = "https://docs.google.com/document/d/1BaTEjXu2O8M7Cz_8sOt4SIc552KtDWgpOmKaPHEwElQ/edit?usp=sharing";
-    if (seasonTag === "Spring") {
-        $w("#buttonClassMapEast2").link = springUrl;
-    }
-    if (seasonTag === "Summer") {
-        $w("#buttonClassMapEast2").link = summerUrl;
-    }
-    if (seasonTag === "Fall") {
-        $w("#buttonClassMapEast2").link = fallUrl;
-    }
-    if (seasonTag === "Winter") {
-        $w("#buttonClassMapEast2").link = winterUrl;
-    }
-})
-*/
-
-/*
-function filterDayDropdown() {
-
-    $w("#datasetLearning").onReady(() => {
-
-        $w("#dropdownDay").onChange(() => {
-            console.log($w("#dropdownDay").value)
-
-            if ($w("#dropdownDay").value === "All") {
-
-                $w("#datasetLearning").setFilter(wixData.filter().ne("isHidden", true))
-                    .then(count)
-
-            } else {
-
-                $w("#datasetLearning").setFilter(wixData.filter().contains("day", $w("#dropdownDay").value).ne("isHidden", true))
-                    .then(count)
-
-            }
-
-        })
-
-    })
-}
-*/
 
 function populateLocation() {
   wixData
@@ -165,45 +104,6 @@ function count2() {
     $w('#resetBtn').hide()
   })
 }
-
-/*
-async function buildCampus() {
-
-    // get non-duplicate provider id from the database
-    let resCampus = await wixData.query('LearningCommunity').ne("isHidden", true).limit(999).distinct("campus");
-    console.log({ resCampus });
-
-    let res = await wixData.query("Campuses").hasSome("_id", resCampus.items).limit(999).ascending("title").find();
-    console.log({ res })
-    let options = [{
-            label: "All",
-            value: "all"
-        },
-        ...res.items.map(el => ({ label: el.title, value: el._id }))
-    ]
-    console.log({ options })
-
-    $w("#dropdownCampus").options = options
-
-}
-
-function filterCampusDropdown() {
-
-    $w("#dropdownCampus").onChange(() => {
-
-        $w("#loading").show();
-
-        console.log($w("#dropdownCampus").value)
-
-        $w("#datasetLearning").setFilter(wixData.filter().hasSome("campus", $w("#dropdownCampus").value))
-            .then(count)
-
-        //$w("#datasetLearning").setFilter(wixData.filter().hasSome("_id", $w("#dropdownCampus").value))
-        //.then(count)
-
-    })
-}
-*/
 
 function search() {
   $w('#loading').show()
