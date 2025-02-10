@@ -60,15 +60,21 @@ const handleAddSeason = () => {
     $w('#txtError').hide()
   }
 
-  const validateNewEndDate =
-    seasons.length > 0
-      ? seasons.every((season) => {
-          return newSeason.startDate > new Date(season.endDate)
-        })
-      : true
+  const hasOverlap = seasons.some((season) => {
+    const seasonStart = new Date(season.startDate)
+    const seasonEnd = new Date(season.endDate)
+    const newStart = new Date(newSeason.startDate)
+    const newEnd = new Date(newSeason.endDate)
 
-  if (!validateNewEndDate) {
-    $w('#txtError').text = 'New season must start after the last season ends'
+    return (
+      (newStart >= seasonStart && newStart <= seasonEnd) ||
+      (newEnd >= seasonStart && newEnd <= seasonEnd) ||
+      (newStart <= seasonStart && newEnd >= seasonEnd)
+    )
+  })
+
+  if (hasOverlap) {
+    $w('#txtError').text = 'New season dates overlap with an existing season'
     $w('#txtError').show()
     return
   }
@@ -79,11 +85,12 @@ const handleAddSeason = () => {
   }
 
   seasons.push(newSeason)
+
   $w('#txtError').text = ''
   $w('#txtError').hide()
   $w('#iptLabel').value = ''
-  $w('#startDate').value = new Date()
-  $w('#endDate').value = new Date()
+  $w('#startDate').value = undefined
+  $w('#endDate').value = undefined
   $w('#iptHref').value = ''
 
   $w('#rptSeasons').data = seasons
